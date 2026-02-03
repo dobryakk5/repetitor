@@ -1037,6 +1037,13 @@
                     
                     document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
+                    
+                    // Сбрасываем состояние проверки
+                    document.querySelectorAll('.word').forEach(w => {
+                        w.classList.remove('correct', 'incorrect', 'not-processed');
+                    });
+                    document.getElementById('result-message').style.display = 'none';
+                    document.getElementById('check-btn').disabled = false;
                 }
             });
         });
@@ -1214,6 +1221,11 @@
                     
                     // Сохраняем выбор пользователя
                     morphAnswers[word][field.prop] = option;
+                    
+                    // Сбрасываем состояние проверки
+                    section.classList.remove('section-error', 'section-correct');
+                    document.getElementById('morph-result-message').style.display = 'none';
+                    document.getElementById('morph-check-btn').disabled = false;
                     
                     // Показываем кнопку проверки если есть хотя бы один ответ
                     document.getElementById('morph-check-btn').style.display = 'block';
