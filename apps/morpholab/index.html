@@ -27,12 +27,47 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
+        .header-top {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title {
+            text-align: center;
+        }
+
         .header h1 {
             background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-size: 36px;
             margin-bottom: 10px;
+        }
+
+        .header-subtitle {
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .back-btn {
+            justify-self: start;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
 
         .stats {
@@ -168,7 +203,7 @@
             color: #6b7280;
             font-weight: 600;
             margin-bottom: 10px;
-            text-transform: uppercase;
+            text-transform: none;
         }
 
         .morphemes {
@@ -366,14 +401,32 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        @media (max-width: 768px) {
+            .header-top {
+                grid-template-columns: 1fr;
+            }
+
+            .back-btn {
+                justify-self: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🧪 МорфоЛаб</h1>
-            <p style="text-align: center; color: #6b7280;">Собирай слова из морфем как пазл!</p>
+            <div class="header-top">
+                <button onclick="window.location.href='/index.html'" class="back-btn">
+                    ← Назад к тестам
+                </button>
+                <div class="header-title">
+                    <h1>🧪 МорфоЛаб</h1>
+                    <p class="header-subtitle">Собирай слова из морфем как пазл!</p>
+                </div>
+                <div></div>
+            </div>
             <div class="stats">
                 <div class="stat">
                     <div class="stat-value" id="score">0</div>
@@ -394,16 +447,13 @@
         <div class="game-area">
             <!-- Level Info -->
             <div class="level-info">
-                <div class="level-title" id="levelTitle">Уровень 1</div>
-                <div class="level-description" id="levelDesc">Собери простое слово</div>
-                <div class="target-box">
-                    <div class="target-label">Цель:</div>
-                    <div class="target-text" id="targetMeaning">Процесс полёта</div>
-                </div>
-                <button onclick="window.location.href='../index.html'" class="btn" style="width: 100%; background: #667eea; color: white;">
-                    ← Назад к тестам
-                </button>
+            <div class="level-title" id="levelTitle">Уровень 1</div>
+            <div class="level-description" id="levelDesc">Собери слово с окончанием</div>
+            <div class="target-box">
+                <div class="target-label">Цель:</div>
+                <div class="target-text" id="targetMeaning">Форма слова "полет"</div>
             </div>
+        </div>
 
             <!-- Construction Area -->
             <div class="construction-area">
@@ -464,18 +514,18 @@
                 { id: 'i', text: 'и', meaning: 'действие', color: '#f59e0b' }
             ],
             ending: [
-                { id: 'null', text: '∅', meaning: 'нулевое', color: '#ef4444' },
+                { id: 'i_end', text: 'и', meaning: 'окончание', color: '#ef4444' },
                 { id: 'a', text: 'а', meaning: 'жен.род', color: '#ef4444' }
             ]
         };
 
         // Словарь правильных слов
         const validWords = {
-            'полет': 'Процесс полёта',
-            'перелет': 'Полёт с места на место',
-            'учитель': 'Человек, который учит',
-            'переписчик': 'Человек, который переписывает',
-            'запись': 'То, что записано'
+            'полета': 'Форма слова "полет"',
+            'перелета': 'Форма слова "перелет"',
+            'учителя': 'Множественное число слова "учитель"',
+            'переписчики': 'Люди, которые переписывают',
+            'записи': 'То, что записано (мн. число)'
         };
 
         // Уровни
@@ -483,18 +533,18 @@
             {
                 id: 1,
                 title: 'Уровень 1: Основы',
-                description: 'Собери простое слово',
-                target: 'полет',
-                targetMeaning: 'Процесс полёта',
-                morphemes: ['po', 'let', 'null']
+                description: 'Собери слово с окончанием',
+                target: 'полета',
+                targetMeaning: 'Форма слова "полет"',
+                morphemes: ['po', 'let', 'a']
             },
             {
                 id: 2,
                 title: 'Уровень 2: Профессия',
-                description: 'Собери название профессии',
-                target: 'учитель',
-                targetMeaning: 'Человек, который учит',
-                morphemes: ['uch', 'i', 'tel', 'null']
+                description: 'Собери слово во множественном числе',
+                target: 'переписчики',
+                targetMeaning: 'Люди, которые переписывают',
+                morphemes: ['pere', 'pis', 'chik', 'i_end']
             }
         ];
 
@@ -525,13 +575,20 @@
             const library = document.getElementById('morphemeLibrary');
             library.innerHTML = '';
 
+            const labelMap = {
+                prefix: 'приставка',
+                root: 'корень',
+                suffix: 'суффикс',
+                ending: 'окончание'
+            };
+
             ['prefix', 'root', 'suffix', 'ending'].forEach(type => {
                 const group = document.createElement('div');
                 group.className = 'morpheme-group';
                 
                 const label = document.createElement('div');
                 label.className = 'group-label';
-                label.textContent = type;
+                label.textContent = labelMap[type] || type;
                 group.appendChild(label);
 
                 const container = document.createElement('div');
@@ -665,7 +722,7 @@
                 });
 
                 // Показать превью слова
-                const word = construction.map(c => c.morpheme.text === '∅' ? '' : c.morpheme.text).join('');
+                const word = construction.map(c => c.morpheme.text).join('');
                 document.getElementById('wordText').textContent = word || '...';
                 document.getElementById('wordPreview').style.display = 'block';
                 document.getElementById('checkBtn').disabled = false;
@@ -674,7 +731,7 @@
 
         // Проверка слова
         function checkWord() {
-            const word = construction.map(c => c.morpheme.text === '∅' ? '' : c.morpheme.text).join('');
+            const word = construction.map(c => c.morpheme.text).join('');
             attempts++;
             document.getElementById('attempts').textContent = attempts;
 
