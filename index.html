@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Морфологический разбор предложения</title>
+    <title>Разбор предложения</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
@@ -12,25 +12,202 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
-        .container {
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: white;
             border-radius: 20px;
             padding: 40px;
-            max-width: 900px;
-            width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
         h1 {
             text-align: center;
             color: #667eea;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 28px;
+        }
+
+        .variant-info {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .layout {
+            display: flex;
+            gap: 20px;
+        }
+
+        .content-area {
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .sidebar-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .variant-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .variant-btn {
+            padding: 12px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .variant-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .variant-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .variant-btn.completed {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .check-mark {
+            font-size: 14px;
+        }
+
+        .sentence-container {
+            background: #f8f9ff;
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 30px 30px 30px;
+            margin-bottom: 30px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sentence {
+            font-size: 24px;
+            line-height: 1.8;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .word {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 0 3px;
+            position: relative;
+        }
+
+        .word:hover {
+            background-color: #e8ecff;
+            transform: translateY(-2px);
+        }
+
+        .word.selected {
+            color: #667eea;
+        }
+
+        .word.correct {
+            background-color: #d1fae5;
+        }
+
+        .word.incorrect {
+            background-color: #fee2e2;
+        }
+
+        .word.not-processed {
+            background-color: #fef3c7;
+        }
+
+        /* Подчёркивания по типам */
+        .word.подлежащее {
+            border-bottom: 3px solid #667eea;
+        }
+
+        .word.сказуемое {
+            border-bottom: 6px double #764ba2;
+        }
+
+        .word.дополнение {
+            border-bottom: 3px dashed #9333ea;
+        }
+
+        .word.определение {
+            text-decoration: underline wavy #f59e0b;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 12px;
+        }
+
+        .word.обстоятельство {
+            position: relative;
+            padding-bottom: 2px;
+        }
+
+        .word.обстоятельство::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-image: repeating-linear-gradient(
+                to right,
+                #10b981 0px,
+                #10b981 8px,
+                transparent 8px,
+                transparent 10px,
+                #10b981 10px,
+                #10b981 12px,
+                transparent 12px,
+                transparent 14px
+            );
+        }
+
+        .word[data-part]::before {
+            content: attr(data-part-abbr);
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #9ca3af;
+            font-weight: normal;
+            white-space: nowrap;
         }
 
         .main-tabs {
@@ -69,11 +246,20 @@
 
         .main-tab-content {
             display: none;
-            animation: fadeIn 0.3s ease;
         }
 
         .main-tab-content.active {
             display: block;
+        }
+
+        .instruction {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #856404;
         }
 
         .parts-analysis {
@@ -81,6 +267,7 @@
             padding: 25px;
             border-radius: 12px;
             border-left: 4px solid #667eea;
+            margin-bottom: 20px;
         }
 
         .parts-analysis h3 {
@@ -155,100 +342,50 @@
             user-select: none;
         }
 
-        .sentence-container {
-            background: #f8f9ff;
-            border: 2px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px 30px 30px 30px;
-            margin-bottom: 30px;
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .sentence {
-            font-size: 24px;
-            line-height: 1.8;
-            text-align: center;
-            color: #2c3e50;
-        }
-
-        .word {
+        .check-button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            margin: 0 3px;
-            position: relative;
+            transition: all 0.3s;
         }
 
-        .word:hover {
-            background-color: #e8ecff;
+        .check-button:hover {
+            background: #5568d3;
             transform: translateY(-2px);
         }
 
-        .word.selected {
-            font-weight: bold;
-            color: #667eea;
+        .check-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        /* Сокращение части речи над словом */
-        .word[data-part]::before {
-            content: attr(data-part-abbr);
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 11px;
-            color: #9ca3af;
-            font-weight: normal;
-            white-space: nowrap;
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            display: none;
         }
 
-        /* Подчёркивания по типам */
-        .word.подлежащее {
-            border-bottom: 3px solid #667eea;
+        .result-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
         }
 
-        .word.сказуемое {
-            border-bottom: 6px double #764ba2;
-        }
-
-        .word.дополнение {
-            border-bottom: 3px dashed #9333ea;
-        }
-
-        .word.определение {
-            text-decoration: underline wavy #f59e0b;
-            text-decoration-thickness: 2px;
-            text-underline-offset: 8px;
-        }
-
-        .word.обстоятельство {
-            position: relative;
-            padding-bottom: 2px;
-        }
-
-        .word.обстоятельство::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background-image: repeating-linear-gradient(
-                to right,
-                #10b981 0px,
-                #10b981 8px,
-                transparent 8px,
-                transparent 10px,
-                #10b981 10px,
-                #10b981 12px,
-                transparent 12px,
-                transparent 14px
-            );
+        .result-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
         }
 
         .tabs-container {
@@ -280,11 +417,6 @@
             background: #667eea;
             color: white;
             font-weight: bold;
-        }
-
-        .tab.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .analysis-container {
@@ -351,6 +483,17 @@
             background: white;
             border-radius: 10px;
             border: 1px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+
+        .section-error {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .section-correct {
+            background: #d1fae5;
+            border-color: #10b981;
         }
 
         .section-title {
@@ -449,27 +592,17 @@
             );
         }
 
-        .instruction {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 15px;
-            color: #856404;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
+        @media (max-width: 968px) {
+            .layout {
+                flex-direction: column;
             }
 
-            h1 {
-                font-size: 22px;
+            .sidebar {
+                width: 100%;
             }
 
-            .sentence {
-                font-size: 20px;
+            .variant-grid {
+                grid-template-columns: repeat(5, 1fr);
             }
 
             .type-buttons {
@@ -480,118 +613,133 @@
 </head>
 <body>
 
-<div class="container">
+<div class="main-container">
     <h1>Разбор предложения</h1>
+    <div class="variant-info">Вариант <span id="variant-number">1</span> из 11</div>
 
-    <div class="sentence-container">
-        <div class="sentence" id="sentence">
-            Яркое солнце осветило лесную поляну ранним утром.
-        </div>
-    </div>
-
-    <div class="main-tabs">
-        <button class="main-tab active" onclick="switchMainTab('parts')">По частям речи</button>
-        <button class="main-tab" onclick="switchMainTab('morphology')">Морфологический</button>
-    </div>
-
-    <!-- Вкладка "По частям речи" -->
-    <div id="parts-tab" class="main-tab-content active">
-        <div class="instruction">
-            <strong>Инструкция:</strong> Кликните на слово в предложении и выберите его часть речи из списка ниже.
-        </div>
-        
-        <div class="parts-analysis">
-            <h3>Выберите часть речи:</h3>
-            
-            <div class="parts-group">
-                <div class="group-title">1. Самостоятельные (знаменательные)</div>
-                <div class="group-description">Они называют предметы, действия или признаки и являются членами предложения</div>
-                
-                <button class="part-btn" data-part="существительное">
-                    <span class="part-name">Имя существительное</span>
-                    <span class="part-comment">кто? что? — дом, радость</span>
-                </button>
-                
-                <button class="part-btn" data-part="прилагательное">
-                    <span class="part-name">Имя прилагательное</span>
-                    <span class="part-comment">какой? чей? — синий, мамин</span>
-                </button>
-                
-                <button class="part-btn" data-part="числительное">
-                    <span class="part-name">Имя числительное</span>
-                    <span class="part-comment">сколько? который? — пять, второй</span>
-                </button>
-                
-                <button class="part-btn" data-part="местоимение">
-                    <span class="part-name">Местоимение</span>
-                    <span class="part-comment">указывает, но не называет — я, этот, каждый</span>
-                </button>
-                
-                <button class="part-btn" data-part="глагол">
-                    <span class="part-name">Глагол</span>
-                    <span class="part-comment">что делать? — бежать, учиться</span>
-                </button>
-                
-                <button class="part-btn" data-part="причастие">
-                    <span class="part-name">Причастие</span>
-                    <span class="part-comment">особая форма глагола — бегущий</span>
-                </button>
-                
-                <button class="part-btn" data-part="деепричастие">
-                    <span class="part-name">Деепричастие</span>
-                    <span class="part-comment">особая форма глагола — пробежав</span>
-                </button>
-                
-                <button class="part-btn" data-part="наречие">
-                    <span class="part-name">Наречие</span>
-                    <span class="part-comment">как? где? когда? — быстро, вчера</span>
-                </button>
+    <div class="layout">
+        <div class="content-area">
+            <div class="sentence-container">
+                <div class="sentence" id="sentence"></div>
             </div>
-            
-            <div class="parts-group">
-                <div class="group-title">2. Служебные</div>
-                <div class="group-description">Не отвечают на вопросы и нужны для связи слов или передачи оттенков значения</div>
-                
-                <button class="part-btn" data-part="предлог">
-                    <span class="part-name">Предлог</span>
-                    <span class="part-comment">в, на, под</span>
-                </button>
-                
-                <button class="part-btn" data-part="союз">
-                    <span class="part-name">Союз</span>
-                    <span class="part-comment">и, но, потому что</span>
-                </button>
-                
-                <button class="part-btn" data-part="частица">
-                    <span class="part-name">Частица</span>
-                    <span class="part-comment">не, бы, неужели</span>
-                </button>
-            </div>
-            
-            <div class="parts-group">
-                <div class="group-title">3. Особая группа</div>
-                <div class="group-description">Выражает чувства, но не называет их</div>
-                
-                <button class="part-btn" data-part="междометие">
-                    <span class="part-name">Междометие</span>
-                    <span class="part-comment">ах!, ой!</span>
-                </button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Вкладка "Морфологический" -->
-    <div id="morphology-tab" class="main-tab-content">
-        <div class="instruction">
-            <strong>Инструкция:</strong> Кликните на слово в предложении, чтобы определить его часть речи и выполнить морфологический разбор.
-        </div>
-        
-        <div class="tabs-container" id="tabs-container">
-            <!-- Вкладки слов будут добавлены динамически -->
+            <div class="main-tabs">
+                <button class="main-tab active" onclick="switchMainTab('parts')">По частям речи</button>
+                <button class="main-tab" onclick="switchMainTab('morphology')">Морфологический</button>
+            </div>
+
+            <!-- Вкладка "По частям речи" -->
+            <div id="parts-tab" class="main-tab-content active">
+                <div class="instruction">
+                    <strong>Инструкция:</strong> Кликните на слово в предложении и выберите его часть речи из списка ниже.
+                </div>
+                
+                <div class="parts-analysis">
+                    <h3>Выберите часть речи:</h3>
+                    
+                    <div class="parts-group">
+                        <div class="group-title">1. Самостоятельные (знаменательные)</div>
+                        <div class="group-description">Они называют предметы, действия или признаки и являются членами предложения</div>
+                        
+                        <button class="part-btn" data-part="существительное">
+                            <span class="part-name">Имя существительное</span>
+                            <span class="part-comment">кто? что? — дом, радость</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="прилагательное">
+                            <span class="part-name">Имя прилагательное</span>
+                            <span class="part-comment">какой? чей? — синий, мамин</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="числительное">
+                            <span class="part-name">Имя числительное</span>
+                            <span class="part-comment">сколько? который? — пять, второй</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="местоимение">
+                            <span class="part-name">Местоимение</span>
+                            <span class="part-comment">указывает, но не называет — я, этот, каждый</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="глагол">
+                            <span class="part-name">Глагол</span>
+                            <span class="part-comment">что делать? — бежать, учиться</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="причастие">
+                            <span class="part-name">Причастие</span>
+                            <span class="part-comment">особая форма глагола — бегущий</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="деепричастие">
+                            <span class="part-name">Деепричастие</span>
+                            <span class="part-comment">особая форма глагола — пробежав</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="наречие">
+                            <span class="part-name">Наречие</span>
+                            <span class="part-comment">как? где? когда? — быстро, вчера</span>
+                        </button>
+                    </div>
+                    
+                    <div class="parts-group">
+                        <div class="group-title">2. Служебные</div>
+                        <div class="group-description">Не отвечают на вопросы и нужны для связи слов или передачи оттенков значения</div>
+                        
+                        <button class="part-btn" data-part="предлог">
+                            <span class="part-name">Предлог</span>
+                            <span class="part-comment">в, на, под</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="союз">
+                            <span class="part-name">Союз</span>
+                            <span class="part-comment">и, но, потому что</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="частица">
+                            <span class="part-name">Частица</span>
+                            <span class="part-comment">не, бы, неужели</span>
+                        </button>
+                    </div>
+                    
+                    <div class="parts-group">
+                        <div class="group-title">3. Особая группа</div>
+                        <div class="group-description">Выражает чувства, но не называет их</div>
+                        
+                        <button class="part-btn" data-part="междометие">
+                            <span class="part-name">Междометие</span>
+                            <span class="part-comment">ах!, ой!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="check-button" id="check-btn" onclick="checkVariant()">Проверить</button>
+                <div class="result-message" id="result-message"></div>
+            </div>
+
+            <!-- Вкладка "Морфологический" -->
+            <div id="morphology-tab" class="main-tab-content">
+                <div class="instruction">
+                    <strong>Инструкция:</strong> Кликните на слово в предложении, чтобы определить его часть речи и выполнить морфологический разбор.
+                </div>
+                
+                <div class="tabs-container" id="tabs-container">
+                    <!-- Вкладки слов будут добавлены динамически -->
+                </div>
+
+                <div id="analysis-panels">
+                    <!-- Панели анализа будут добавлены динамически -->
+                </div>
+
+                <button class="check-button" id="morph-check-btn" onclick="checkMorphology()" style="display: none;">Проверить морфологический разбор</button>
+                <div class="result-message" id="morph-result-message"></div>
+            </div>
         </div>
 
-        <div id="analysis-panels">
-            <!-- Панели анализа будут добавлены динамически -->
+        <!-- Боковая панель с вариантами -->
+        <div class="sidebar">
+            <div class="sidebar-title">Варианты</div>
+            <div class="variant-grid" id="variant-grid"></div>
         </div>
     </div>
 
@@ -616,7 +764,143 @@
 </div>
 
 <script>
-    // Данные для разбора
+    // Данные для вариантов с проверкой
+    const sentenceVariants = [
+        { 
+            sentence: "Яркое солнце осветило лесную поляну ранним утром.",
+            correct: {
+                'яркое': 'прилагательное',
+                'солнце': 'существительное',
+                'осветило': 'глагол',
+                'лесную': 'прилагательное',
+                'поляну': 'существительное',
+                'ранним': 'прилагательное',
+                'утром': 'существительное'
+            }
+        },
+        { 
+            sentence: "Веселые котята играют с пушистым клубочком.",
+            correct: {
+                'веселые': 'прилагательное',
+                'котята': 'существительное',
+                'играют': 'глагол',
+                'с': 'предлог',
+                'пушистым': 'прилагательное',
+                'клубочком': 'существительное'
+            }
+        },
+        { 
+            sentence: "Маленькая девочка нарисовала красивую бабочку.",
+            correct: {
+                'маленькая': 'прилагательное',
+                'девочка': 'существительное',
+                'нарисовала': 'глагол',
+                'красивую': 'прилагательное',
+                'бабочку': 'существительное'
+            }
+        },
+        { 
+            sentence: "Добрый щенок весело бегает по зеленой траве.",
+            correct: {
+                'добрый': 'прилагательное',
+                'щенок': 'существительное',
+                'весело': 'наречие',
+                'бегает': 'глагол',
+                'по': 'предлог',
+                'зеленой': 'прилагательное',
+                'траве': 'существительное'
+            }
+        },
+        { 
+            sentence: "Белочка быстро прыгает и собирает орешки.",
+            correct: {
+                'белочка': 'существительное',
+                'быстро': 'наречие',
+                'прыгает': 'глагол',
+                'и': 'союз',
+                'собирает': 'глагол',
+                'орешки': 'существительное'
+            }
+        },
+        { 
+            sentence: "Разноцветные шарики летят высоко в небо.",
+            correct: {
+                'разноцветные': 'прилагательное',
+                'шарики': 'существительное',
+                'летят': 'глагол',
+                'высоко': 'наречие',
+                'в': 'предлог',
+                'небо': 'существительное'
+            }
+        },
+        { 
+            sentence: "Мама испекла вкусный пирог с яблоками.",
+            correct: {
+                'мама': 'существительное',
+                'испекла': 'глагол',
+                'вкусный': 'прилагательное',
+                'пирог': 'существительное',
+                'с': 'предлог',
+                'яблоками': 'существительное'
+            }
+        },
+        { 
+            sentence: "Озорные воробьи громко чирикают на ветке.",
+            correct: {
+                'озорные': 'прилагательное',
+                'воробьи': 'существительное',
+                'громко': 'наречие',
+                'чирикают': 'глагол',
+                'на': 'предлог',
+                'ветке': 'существительное'
+            }
+        },
+        { 
+            sentence: "Дедушка читает интересную сказку про волшебника.",
+            correct: {
+                'дедушка': 'существительное',
+                'читает': 'глагол',
+                'интересную': 'прилагательное',
+                'сказку': 'существительное',
+                'про': 'предлог',
+                'волшебника': 'существительное'
+            }
+        },
+        { 
+            sentence: "Синяя бабочка тихо села на душистый цветок.",
+            correct: {
+                'синяя': 'прилагательное',
+                'бабочка': 'существительное',
+                'тихо': 'наречие',
+                'села': 'глагол',
+                'на': 'предлог',
+                'душистый': 'прилагательное',
+                'цветок': 'существительное'
+            }
+        },
+        { 
+            sentence: "Радостные дети строят большой замок из песка.",
+            correct: {
+                'радостные': 'прилагательное',
+                'дети': 'существительное',
+                'строят': 'глагол',
+                'большой': 'прилагательное',
+                'замок': 'существительное',
+                'из': 'предлог',
+                'песка': 'существительное'
+            }
+        }
+    ];
+
+    let currentVariant = 0;
+    let userChoices = {};
+    let completedVariants = new Set();
+    let selectedWord = null;
+    let currentMode = 'parts';
+    let activeTab = null;
+    let morphAnswers = {}; // Ответы морфологического разбора для каждого слова
+
+    // Данные для морфологического разбора
     const wordData = {
         'яркое': {
             type: 'определение',
@@ -626,8 +910,7 @@
                 'форма': 'полное',
                 'род': 'ср.р.',
                 'число': 'ед.ч.',
-                'падеж': 'И.п.',
-                'роль': 'определение'
+                'падеж': 'И.п.'
             }
         },
         'солнце': {
@@ -639,8 +922,7 @@
                 'род': 'ср.р.',
                 'склонение': '2-е',
                 'число': 'ед.ч.',
-                'падеж': 'И.п.',
-                'роль': 'подлежащее'
+                'падеж': 'И.п.'
             }
         },
         'осветило': {
@@ -651,8 +933,7 @@
                 'переходность': 'переходный',
                 'время': 'прошедшее',
                 'род': 'ср.р.',
-                'число': 'ед.ч.',
-                'роль': 'сказуемое'
+                'число': 'ед.ч.'
             }
         },
         'лесную': {
@@ -663,8 +944,7 @@
                 'форма': 'полное',
                 'род': 'ж.р.',
                 'число': 'ед.ч.',
-                'падеж': 'В.п.',
-                'роль': 'определение'
+                'падеж': 'В.п.'
             }
         },
         'поляну': {
@@ -676,8 +956,7 @@
                 'род': 'ж.р.',
                 'склонение': '1-е',
                 'число': 'ед.ч.',
-                'падеж': 'В.п.',
-                'роль': 'дополнение'
+                'падеж': 'В.п.'
             }
         },
         'ранним': {
@@ -688,8 +967,7 @@
                 'форма': 'полное',
                 'род': 'ср.р.',
                 'число': 'ед.ч.',
-                'падеж': 'Т.п.',
-                'роль': 'определение'
+                'падеж': 'Т.п.'
             }
         },
         'утром': {
@@ -701,8 +979,7 @@
                 'род': 'ср.р.',
                 'склонение': '2-е',
                 'число': 'ед.ч.',
-                'падеж': 'Т.п.',
-                'роль': 'обстоятельство'
+                'падеж': 'Т.п.'
             }
         }
     };
@@ -715,71 +992,49 @@
             { prop: 'gender', title: 'Род', options: ['м.р.', 'ж.р.', 'ср.р.'] },
             { prop: 'declension', title: 'Склонение', options: ['1-е', '2-е', '3-е'] },
             { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] },
-            { prop: 'case', title: 'Падеж', options: ['И.п.', 'Р.п.', 'Д.п.', 'В.п.', 'Т.п.', 'П.п.'] },
-            { prop: 'role', title: 'Роль в предложении', options: ['подлежащее', 'дополнение', 'обстоятельство'] }
+            { prop: 'case', title: 'Падеж', options: ['И.п.', 'Р.п.', 'Д.п.', 'В.п.', 'Т.п.', 'П.п.'] }
         ],
         'прилагательное': [
             { prop: 'quality', title: 'Качественное / относительное', options: ['качественное', 'относительное', 'притяжательное'] },
             { prop: 'form', title: 'Форма', options: ['полное', 'краткое'] },
             { prop: 'gender', title: 'Род', options: ['м.р.', 'ж.р.', 'ср.р.'] },
             { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] },
-            { prop: 'case', title: 'Падеж', options: ['И.п.', 'Р.п.', 'Д.п.', 'В.п.', 'Т.п.', 'П.п.'] },
-            { prop: 'role', title: 'Роль в предложении', options: ['определение', 'сказуемое'] }
+            { prop: 'case', title: 'Падеж', options: ['И.п.', 'Р.п.', 'Д.п.', 'В.п.', 'Т.п.', 'П.п.'] }
         ],
         'глагол': [
             { prop: 'aspect', title: 'Вид', options: ['совершенный', 'несовершенный'] },
             { prop: 'transitivity', title: 'Переходность', options: ['переходный', 'непереходный'] },
             { prop: 'tense', title: 'Время', options: ['настоящее', 'прошедшее', 'будущее'] },
             { prop: 'gender', title: 'Род (для прош. вр.)', options: ['м.р.', 'ж.р.', 'ср.р.', '-'] },
-            { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] },
-            { prop: 'role', title: 'Роль в предложении', options: ['сказуемое'] }
+            { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] }
         ]
     };
 
-    let selectedWord = null;
-    let activeTab = null;
-    let currentMode = 'parts'; // 'parts' или 'morphology'
+    const abbreviations = {
+        'существительное': 'Сущ.',
+        'прилагательное': 'Прил.',
+        'числительное': 'Числ.',
+        'местоимение': 'Мест.',
+        'глагол': 'Гл.',
+        'причастие': 'Прич.',
+        'деепричастие': 'Деепр.',
+        'наречие': 'Нар.',
+        'предлог': 'Предл.',
+        'союз': 'Союз',
+        'частица': 'Част.',
+        'междометие': 'Межд.'
+    };
 
-    // Переключение главных вкладок
-    function switchMainTab(mode) {
-        currentMode = mode;
-        
-        // Переключаем вкладки
-        document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.main-tab-content').forEach(content => content.classList.remove('active'));
-        
-        if (mode === 'parts') {
-            document.querySelector('.main-tab[onclick*="parts"]').classList.add('active');
-            document.getElementById('parts-tab').classList.add('active');
-        } else {
-            document.querySelector('.main-tab[onclick*="morphology"]').classList.add('active');
-            document.getElementById('morphology-tab').classList.add('active');
-        }
-    }
-
-    // Инициализация
     function init() {
-        const sentenceEl = document.getElementById('sentence');
-        const words = sentenceEl.textContent.trim().split(/\s+/);
+        initVariantButtons();
+        loadVariant(0);
         
-        sentenceEl.innerHTML = words.map(word => {
-            const cleanWord = word.replace(/[.,!?;:]/, '').toLowerCase();
-            return `<span class="word" data-word="${cleanWord}">${word}</span>`;
-        }).join(' ');
-
-        // Добавляем обработчики на слова
-        document.querySelectorAll('.word').forEach(wordEl => {
-            wordEl.addEventListener('click', () => selectWord(wordEl));
-        });
-
-        // Обработчики для кнопок "По частям речи"
         document.querySelectorAll('.part-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (selectedWord) {
                     const part = btn.getAttribute('data-part');
-                    applyPartOfSpeech(selectedWord.word, part);
+                    applyPartOfSpeech(selectedWord, part);
                     
-                    // Активируем кнопку
                     document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                 }
@@ -787,46 +1042,65 @@
         });
     }
 
+    function initVariantButtons() {
+        const grid = document.getElementById('variant-grid');
+        sentenceVariants.forEach((_, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'variant-btn';
+            btn.id = `variant-${index}`;
+            btn.innerHTML = `<span>${index + 1}</span><span class="check-mark" id="check-${index}"></span>`;
+            btn.onclick = () => loadVariant(index);
+            grid.appendChild(btn);
+        });
+    }
+
+    function loadVariant(index) {
+        currentVariant = index;
+        userChoices = {};
+        selectedWord = null;
+        morphAnswers = {};
+        
+        const variant = sentenceVariants[index];
+        const sentenceEl = document.getElementById('sentence');
+        const words = variant.sentence.split(/\s+/);
+        
+        sentenceEl.innerHTML = words.map(word => {
+            const cleanWord = word.replace(/[.,!?;:]/, '').toLowerCase();
+            return `<span class="word" data-word="${cleanWord}">${word}</span>`;
+        }).join(' ');
+
+        document.querySelectorAll('.word').forEach(wordEl => {
+            wordEl.addEventListener('click', () => selectWord(wordEl));
+        });
+
+        document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('result-message').style.display = 'none';
+        document.getElementById('check-btn').disabled = false;
+        
+        // Очистка морфологического разбора
+        document.getElementById('tabs-container').innerHTML = '';
+        document.getElementById('analysis-panels').innerHTML = '';
+        document.getElementById('morph-check-btn').style.display = 'none';
+        document.getElementById('morph-check-btn').disabled = false;
+        document.getElementById('morph-result-message').style.display = 'none';
+        
+        document.getElementById('variant-number').textContent = index + 1;
+        updateVariantButtons();
+    }
+
     function selectWord(wordEl) {
         const word = wordEl.getAttribute('data-word');
         
-        // Снимаем выделение с предыдущего слова
         document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
-        
-        // Выделяем текущее слово
         wordEl.classList.add('selected');
-        selectedWord = { element: wordEl, word: word };
-
+        selectedWord = word;
+        
         if (currentMode === 'morphology') {
             // Создаём или активируем вкладку для морфологического разбора
             createOrActivateTab(word);
         } else {
-            // В режиме "По частям речи" просто подсвечиваем выбранное слово
             document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
         }
-    }
-
-    function applyPartOfSpeech(word, part) {
-        // Словарь сокращений
-        const abbreviations = {
-            'существительное': 'Сущ.',
-            'прилагательное': 'Прил.',
-            'числительное': 'Числ.',
-            'местоимение': 'Мест.',
-            'глагол': 'Гл.',
-            'причастие': 'Прич.',
-            'деепричастие': 'Деепр.',
-            'наречие': 'Нар.',
-            'предлог': 'Предл.',
-            'союз': 'Союз',
-            'частица': 'Част.',
-            'междометие': 'Межд.'
-        };
-        
-        // Сохраняем информацию о части речи
-        const wordEl = document.querySelector(`[data-word="${word}"]`);
-        wordEl.setAttribute('data-part', part);
-        wordEl.setAttribute('data-part-abbr', abbreviations[part] || part);
     }
 
     function createOrActivateTab(word) {
@@ -834,31 +1108,30 @@
         const existingTab = document.getElementById(`tab-${word}`);
 
         if (existingTab) {
-            // Активируем существующую вкладку
-            activateTab(word);
+            activateWordTab(word);
         } else {
-            // Создаём новую вкладку
             const tab = document.createElement('button');
             tab.className = 'tab';
             tab.id = `tab-${word}`;
             tab.textContent = word.charAt(0).toUpperCase() + word.slice(1);
-            tab.addEventListener('click', () => activateTab(word));
+            tab.addEventListener('click', () => activateWordTab(word));
             tabsContainer.appendChild(tab);
 
-            // Создаём панель анализа
             createAnalysisPanel(word);
-            activateTab(word);
+            activateWordTab(word);
         }
     }
 
-    function activateTab(word) {
-        // Деактивируем все вкладки
+    function activateWordTab(word) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.analysis-container').forEach(p => p.classList.remove('active'));
 
-        // Активируем текущую
-        document.getElementById(`tab-${word}`).classList.add('active');
-        document.getElementById(`panel-${word}`).classList.add('active');
+        const tab = document.getElementById(`tab-${word}`);
+        const panel = document.getElementById(`panel-${word}`);
+        
+        if (tab) tab.classList.add('active');
+        if (panel) panel.classList.add('active');
+        
         activeTab = word;
     }
 
@@ -868,7 +1141,6 @@
         panel.className = 'analysis-container';
         panel.id = `panel-${word}`;
 
-        // Выбор части речи
         const typeSelector = document.createElement('div');
         typeSelector.className = 'word-type-selector';
         typeSelector.innerHTML = `
@@ -884,7 +1156,6 @@
 
         panel.appendChild(typeSelector);
 
-        // Контейнер для формы разбора
         const formContainer = document.createElement('div');
         formContainer.id = `form-${word}`;
         formContainer.style.display = 'none';
@@ -892,25 +1163,19 @@
 
         panelsContainer.appendChild(panel);
 
-        // Обработчики для кнопок типа
         typeSelector.querySelectorAll('.type-btn').forEach(btn => {
             btn.addEventListener('click', () => selectWordType(word, btn.getAttribute('data-type'), btn));
         });
     }
 
     function selectWordType(word, type, btn) {
-        // Активируем кнопку
         btn.parentElement.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        // Применяем подчёркивание к слову
         const wordEl = document.querySelector(`[data-word="${word}"]`);
         wordEl.className = 'word selected ' + type;
 
-        // Определяем часть речи по типу роли
         let partOfSpeech = wordData[word]?.part || 'существительное';
-        
-        // Показываем форму разбора
         showAnalysisForm(word, partOfSpeech);
     }
 
@@ -921,9 +1186,15 @@
 
         const template = analysisTemplates[partOfSpeech] || analysisTemplates['существительное'];
         
+        // Инициализируем объект для ответов этого слова
+        if (!morphAnswers[word]) {
+            morphAnswers[word] = {};
+        }
+        
         template.forEach(field => {
             const section = document.createElement('div');
             section.className = 'section';
+            section.setAttribute('data-prop', field.prop);
             
             const title = document.createElement('div');
             title.className = 'section-title';
@@ -940,6 +1211,12 @@
                 optionBtn.addEventListener('click', () => {
                     btnGroup.querySelectorAll('.option').forEach(b => b.classList.remove('active'));
                     optionBtn.classList.add('active');
+                    
+                    // Сохраняем выбор пользователя
+                    morphAnswers[word][field.prop] = option;
+                    
+                    // Показываем кнопку проверки если есть хотя бы один ответ
+                    document.getElementById('morph-check-btn').style.display = 'block';
                 });
                 btnGroup.appendChild(optionBtn);
             });
@@ -949,8 +1226,150 @@
         });
     }
 
-    // Запуск приложения
-    init();
+    function applyPartOfSpeech(word, part) {
+        userChoices[word] = part;
+        
+        const wordEl = document.querySelector(`[data-word="${word}"]`);
+        wordEl.setAttribute('data-part', part);
+        wordEl.setAttribute('data-part-abbr', abbreviations[part] || part);
+    }
+
+    function checkVariant() {
+        const variant = sentenceVariants[currentVariant];
+        const resultMsg = document.getElementById('result-message');
+        let errors = 0;
+        let total = Object.keys(variant.correct).length;
+        let notProcessed = 0;
+        
+        document.querySelectorAll('.word').forEach(wordEl => {
+            const word = wordEl.getAttribute('data-word');
+            wordEl.classList.remove('correct', 'incorrect', 'not-processed');
+            
+            if (variant.correct[word]) {
+                if (userChoices[word]) {
+                    // Слово обработано - проверяем правильность
+                    if (userChoices[word] === variant.correct[word]) {
+                        wordEl.classList.add('correct');
+                    } else {
+                        wordEl.classList.add('incorrect');
+                        errors++;
+                    }
+                } else {
+                    // Слово не обработано - выделяем желтым
+                    wordEl.classList.add('not-processed');
+                    notProcessed++;
+                }
+            }
+        });
+        
+        if (notProcessed > 0) {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Не все слова обработаны. Обработано: ${Object.keys(userChoices).length} из ${total}. Слова, выделенные желтым, требуют определения части речи.`;
+            resultMsg.style.display = 'block';
+        } else if (errors === 0) {
+            resultMsg.className = 'result-message success';
+            resultMsg.textContent = '🎉 Отлично! Все правильно!';
+            resultMsg.style.display = 'block';
+            completedVariants.add(currentVariant);
+            updateVariantButtons();
+            document.getElementById('check-btn').disabled = true;
+        } else {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Есть ошибки. Проверьте слова, отмеченные красным. Правильных ответов: ${total - errors} из ${total}`;
+            resultMsg.style.display = 'block';
+        }
+    }
+
+    function updateVariantButtons() {
+        sentenceVariants.forEach((_, index) => {
+            const btn = document.getElementById(`variant-${index}`);
+            const check = document.getElementById(`check-${index}`);
+            
+            btn.classList.remove('active', 'completed');
+            
+            if (index === currentVariant) {
+                btn.classList.add('active');
+            }
+            
+            if (completedVariants.has(index)) {
+                btn.classList.add('completed');
+                check.textContent = '✓';
+            } else {
+                check.textContent = '';
+            }
+        });
+    }
+
+    function checkMorphology() {
+        const resultMsg = document.getElementById('morph-result-message');
+        let totalErrors = 0;
+        let totalWords = 0;
+        
+        // Проходим по всем словам которые есть в wordData
+        for (let word in morphAnswers) {
+            if (!wordData[word]) continue;
+            
+            const correctAnswers = wordData[word].analysis;
+            const userAnswers = morphAnswers[word];
+            const formContainer = document.getElementById(`form-${word}`);
+            
+            if (!formContainer) continue;
+            
+            totalWords++;
+            let wordErrors = 0;
+            
+            // Проверяем каждое свойство
+            for (let prop in correctAnswers) {
+                const section = formContainer.querySelector(`[data-prop="${prop}"]`);
+                if (!section) continue;
+                
+                section.classList.remove('section-error', 'section-correct');
+                
+                if (userAnswers[prop] === correctAnswers[prop]) {
+                    section.classList.add('section-correct');
+                } else {
+                    section.classList.add('section-error');
+                    wordErrors++;
+                    totalErrors++;
+                }
+            }
+        }
+        
+        if (totalWords === 0) {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = 'Выберите хотя бы одно слово и заполните его разбор';
+            resultMsg.style.display = 'block';
+            return;
+        }
+        
+        if (totalErrors === 0) {
+            resultMsg.className = 'result-message success';
+            resultMsg.textContent = '🎉 Отлично! Морфологический разбор выполнен правильно!';
+            resultMsg.style.display = 'block';
+            document.getElementById('morph-check-btn').disabled = true;
+        } else {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Есть ошибки в морфологическом разборе. Проверьте поля, отмеченные красным.`;
+            resultMsg.style.display = 'block';
+        }
+    }
+
+    function switchMainTab(mode) {
+        currentMode = mode;
+        
+        document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.main-tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (mode === 'parts') {
+            document.querySelector('.main-tab[onclick*="parts"]').classList.add('active');
+            document.getElementById('parts-tab').classList.add('active');
+        } else {
+            document.querySelector('.main-tab[onclick*="morphology"]').classList.add('active');
+            document.getElementById('morphology-tab').classList.add('active');
+        }
+    }
+
+    window.onload = init;
 </script>
 
 </body>
