@@ -915,6 +915,54 @@
 </div>
 
 <script>
+    const API_BASE_URL = 'http://localhost:3000/api';
+    const TEST_TYPE = 'sentence_analysis';
+
+    let variantIdByNumber = null;
+    let variantMapPromise = null;
+    let variantStartAt = null;
+
+    async function ensureVariantIdMap() {
+        if (variantIdByNumber) {
+            return variantIdByNumber;
+        }
+
+        if (!variantMapPromise) {
+            variantMapPromise = fetch(`${API_BASE_URL}/tests/variants/${TEST_TYPE}`)
+                .then(async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const map = {};
+                    (data.variants || []).forEach((variant) => {
+                        if (variant.variant_number != null && variant.variant_id != null) {
+                            map[variant.variant_number] = variant.variant_id;
+                        }
+                    });
+
+                    return map;
+                });
+        }
+
+        variantIdByNumber = await variantMapPromise;
+        return variantIdByNumber;
+    }
+
+    async function getCurrentVariantId() {
+        const map = await ensureVariantIdMap();
+        return map[currentVariant + 1] || null;
+    }
+
+    function getTimeSpentSeconds() {
+        if (!variantStartAt) {
+            return 0;
+        }
+
+        return Math.max(0, Math.round((Date.now() - variantStartAt) / 1000));
+    }
+
     // Данные для вариантов с проверкой
     const sentenceVariants = [
         { 
@@ -1821,6 +1869,7 @@
     function init() {
         initVariantButtons();
         loadVariant(0);
+        void ensureVariantIdMap();
         
         document.querySelectorAll('.part-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1903,6 +1952,7 @@
         userChoices = {};
         selectedWord = null;
         morphAnswers = {};
+        variantStartAt = Date.now();
         
         const variant = sentenceVariants[index];
         const sentenceEl = document.getElementById('sentence');
@@ -2314,44 +2364,47 @@
         }
 
         try {
-            // Получаем существующие результаты пользователя
-            let existingData = null;
-            const key = `leaderboard:${name}`;
-            
-            try {
-                const result = await window.storage.get(key, true);
-                if (result && result.value) {
-                    existingData = JSON.parse(result.value);
-                }
-            } catch (e) {
-                // Пользователь новый
+            const variantId = await getCurrentVariantId();
+            if (!variantId) {
+                alert('Не удалось определить вариант теста в базе данных.');
+                return;
             }
 
-            // Обновляем статистику
-            let totalCorrect = currentCorrect;
-            let totalQuestions = currentTotal;
-            
-            if (existingData) {
-                totalCorrect += existingData.correct;
-                totalQuestions += existingData.total;
-            }
+            const totalCorrect = currentCorrect;
+            const totalQuestions = currentTotal;
+            const totalIncorrect = totalQuestions - totalCorrect;
 
-            const accuracy = (totalCorrect / totalQuestions) * 100;
-
-            const scoreData = {
-                name: name,
-                correct: totalCorrect,
-                total: totalQuestions,
-                accuracy: accuracy,
-                lastUpdated: new Date().toISOString()
+            const userAnswers = {
+                parts: userChoices,
+                morphology: morphAnswers,
+                variant_number: currentVariant + 1
             };
 
-            // Сохраняем в shared storage
-            await window.storage.set(key, JSON.stringify(scoreData), true);
+            const response = await fetch(`${API_BASE_URL}/tests/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: name,
+                    variant_id: variantId,
+                    total_questions: totalQuestions,
+                    correct_answers: totalCorrect,
+                    incorrect_answers: totalIncorrect,
+                    user_answers: userAnswers,
+                    time_spent_seconds: getTimeSpentSeconds()
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            }
             
             closeNameModal();
             
             // Показываем уведомление
+            const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
             alert(`✓ Результат сохранён! ${name}: ${totalCorrect}/${totalQuestions} (${accuracy.toFixed(1)}%)`);
             
         } catch (error) {

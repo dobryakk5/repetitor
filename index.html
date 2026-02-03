@@ -192,7 +192,7 @@
         <p class="subtitle">Выберите тест для прохождения</p>
 
         <div class="test-grid">
-            <a href="sentence_check.html" class="test-card">
+            <a href="/apps/sentence_check.html" class="test-card">
                 <div class="test-icon">📝</div>
                 <div class="test-title">Разбор предложения</div>
                 <div class="test-description">
@@ -200,6 +200,17 @@
                 </div>
                 <div class="test-status" id="status-sentence">
                     <span>Не начато</span>
+                </div>
+            </a>
+
+            <a href="/apps/morpholab/index.html" class="test-card">
+                <div class="test-icon">🧪</div>
+                <div class="test-title">МорфоЛаб</div>
+                <div class="test-description">
+                    Собирайте слова из морфем в игровой форме
+                </div>
+                <div class="test-status">
+                    <span>Новое</span>
                 </div>
             </a>
 
@@ -248,34 +259,23 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        const LEADERBOARD_LIMIT = 10;
+
         // Функция для загрузки leaderboard
         async function loadLeaderboard() {
             try {
-                const result = await window.storage.list('leaderboard:', true);
-                
-                if (!result || !result.keys || result.keys.length === 0) {
-                    return;
+                const response = await fetch(`${API_BASE_URL}/leaderboard/all/top?limit=${LEADERBOARD_LIMIT}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
                 }
 
-                // Загружаем все результаты
-                const scores = [];
-                for (const key of result.keys) {
-                    try {
-                        const data = await window.storage.get(key, true);
-                        if (data && data.value) {
-                            scores.push(JSON.parse(data.value));
-                        }
-                    } catch (e) {
-                        console.log('Ключ не найден:', key);
-                    }
-                }
-
+                const scores = data.top_users || [];
                 if (scores.length === 0) {
                     return;
                 }
-
-                // Сортируем по проценту правильных ответов
-                scores.sort((a, b) => b.accuracy - a.accuracy);
 
                 // Создаем таблицу
                 let html = `
@@ -294,16 +294,17 @@
 
                 scores.forEach((score, index) => {
                     const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-                    const accuracyClass = score.accuracy >= 80 ? 'accuracy-high' : 
-                                         score.accuracy >= 60 ? 'accuracy-medium' : 'accuracy-low';
+                    const accuracyValue = Number(score.overall_accuracy ?? 0);
+                    const accuracyClass = accuracyValue >= 80 ? 'accuracy-high' : 
+                                         accuracyValue >= 60 ? 'accuracy-medium' : 'accuracy-low';
                     
                     html += `
                         <tr>
                             <td class="rank ${rankClass}">${index + 1}</td>
-                            <td>${score.name}</td>
-                            <td>${score.correct}</td>
-                            <td>${score.total}</td>
-                            <td class="accuracy ${accuracyClass}">${score.accuracy.toFixed(1)}%</td>
+                            <td>${score.username}</td>
+                            <td>${score.total_correct ?? 0}</td>
+                            <td>${score.total_questions ?? 0}</td>
+                            <td class="accuracy ${accuracyClass}">${accuracyValue.toFixed(1)}%</td>
                         </tr>
                     `;
                 });

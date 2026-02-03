@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
+const pool = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,6 +69,19 @@ app.listen(PORT, () => {
 ║   🌐 http://localhost:${PORT}           ║
 ╚═══════════════════════════════════════╝
     `);
+
+    void warmLeaderboard();
 });
+
+async function warmLeaderboard() {
+    try {
+        await pool.query('SELECT update_leaderboard_ranks()');
+        const result = await pool.query('SELECT COUNT(*)::int AS count FROM leaderboard');
+        const count = result.rows[0]?.count ?? 0;
+        console.log(`✓ Leaderboard loaded from DB (${count} rows)`);
+    } catch (error) {
+        console.error('Ошибка загрузки leaderboard при старте:', error.message);
+    }
+}
 
 module.exports = app;
