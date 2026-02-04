@@ -1,9 +1,9 @@
-// app/page.tsx
+// app/page.tsx (НОВЫЙ - заменит существующий page.tsx)
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { motion, AnimatePresence } from 'framer-motion';
 import { LEVELS } from '../data/levels';
 import { Morpheme, WordConstruction } from '../types/morphology';
 import { VALID_WORDS } from '../data/morphemes';
@@ -13,8 +13,13 @@ import MorphemeLibrary from '../components/MorphemeLibrary';
 import LevelSelector from '../components/LevelSelector';
 import GameHeader from '../components/GameHeader';
 import ResultModal from '../components/ResultModal';
+import MorphemeAnalysisGame from '../components/MorphemeAnalysisGame';
+import MorphemeAnalysisLevel2 from '../components/MorphemeAnalysisLevel2';
 
-export default function MorphoLabGame() {
+type GameMode = 'menu' | 'build' | 'analyze' | 'analyze2';
+
+// Компонент игры "Собрать морфемки" (исходная игра)
+function BuildGame() {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [construction, setConstruction] = useState<Morpheme[]>([]);
   const [score, setScore] = useState(0);
@@ -30,26 +35,21 @@ export default function MorphoLabGame() {
 
   const currentLevel = LEVELS[currentLevelIndex];
 
-  // Проверка возможности соединения морфем
   const canConnect = (morpheme: Morpheme, position: number): boolean => {
     if (construction.length === 0) {
-      // Первая морфема - можно только приставку или корень
       return morpheme.type === 'prefix' || morpheme.type === 'root';
     }
 
     if (position === 0) {
-      // В начало можно только приставку
       return morpheme.type === 'prefix' && 
              construction[0].canAttachLeft.includes(morpheme.type);
     }
 
     if (position === construction.length) {
-      // В конец
       const lastMorpheme = construction[construction.length - 1];
       return lastMorpheme.canAttachRight.includes(morpheme.type);
     }
 
-    // В середину
     const leftMorpheme = construction[position - 1];
     const rightMorpheme = construction[position];
     
@@ -57,11 +57,8 @@ export default function MorphoLabGame() {
            morpheme.canAttachRight.includes(rightMorpheme.type);
   };
 
-  // Проверка собранного слова
   const checkWord = (): WordConstruction => {
     const word = construction.map(m => m.text === '∅' ? '' : m.text).join('');
-    const morphemeTexts = construction.map(m => m.text);
-    
     const validWord = VALID_WORDS[word];
     
     if (validWord) {
@@ -74,7 +71,6 @@ export default function MorphoLabGame() {
       };
     }
 
-    // Проверяем, есть ли целевое слово для уровня
     if (currentLevel.targetWord && word === currentLevel.targetWord) {
       return {
         morphemes: construction,
@@ -113,14 +109,12 @@ export default function MorphoLabGame() {
 
     if (!morpheme) return;
 
-    // Добавление в конструкцию
     if (over.id === 'construction-zone') {
       if (canConnect(morpheme, construction.length)) {
         setConstruction([...construction, morpheme]);
       }
     }
 
-    // Вставка в определенную позицию
     if (typeof over.id === 'string' && over.id.startsWith('slot-')) {
       const position = parseInt(over.id.replace('slot-', ''));
       if (canConnect(morpheme, position)) {
@@ -188,7 +182,6 @@ export default function MorphoLabGame() {
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 p-4">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <GameHeader 
             score={score}
             attempts={attempts}
@@ -196,9 +189,7 @@ export default function MorphoLabGame() {
             totalLevels={LEVELS.length}
           />
 
-          {/* Main Game Area */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-            {/* Level Info & Controls */}
             <div className="lg:col-span-1 space-y-4">
               <LevelSelector
                 levels={LEVELS}
@@ -227,41 +218,15 @@ export default function MorphoLabGame() {
                     </p>
                   </div>
                 )}
-
-                <button
-                  onClick={() => setShowHints(!showHints)}
-                  className="text-sm text-purple-600 hover:text-purple-800 mb-2"
-                >
-                  {showHints ? '🙈 Скрыть подсказки' : '💡 Показать подсказки'}
-                </button>
-
-                <AnimatePresence>
-                  {showHints && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="bg-yellow-50 rounded-lg p-4 space-y-2"
-                    >
-                      {currentLevel.hints?.map((hint, index) => (
-                        <p key={index} className="text-sm text-yellow-800">
-                          {index + 1}. {hint}
-                        </p>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             </div>
 
-            {/* Construction Zone */}
             <div className="lg:col-span-2 space-y-4">
               <ConstructionZone
                 construction={construction}
                 onRemoveMorpheme={handleRemoveMorpheme}
               />
 
-              {/* Controls */}
               <div className="flex gap-4 justify-center">
                 <button
                   onClick={handleCheck}
@@ -282,13 +247,11 @@ export default function MorphoLabGame() {
                 </button>
               </div>
 
-              {/* Morpheme Library */}
               <MorphemeLibrary morphemes={currentLevel.availableMorphemes} />
             </div>
           </div>
         </div>
 
-        {/* Drag Overlay */}
         <DragOverlay>
           {activeMorpheme && (
             <div className="opacity-50">
@@ -297,7 +260,6 @@ export default function MorphoLabGame() {
           )}
         </DragOverlay>
 
-        {/* Result Modal */}
         {showResult && resultData && (
           <ResultModal
             isCorrect={resultData.isCorrect}
@@ -310,5 +272,168 @@ export default function MorphoLabGame() {
         )}
       </div>
     </DndContext>
+  );
+}
+
+// Главный компонент с меню
+export default function MorphoLabMain() {
+  const [gameMode, setGameMode] = useState<GameMode>('menu');
+
+  if (gameMode === 'build') {
+    return (
+      <div>
+        <button
+          onClick={() => setGameMode('menu')}
+          className="fixed top-4 left-4 z-50 px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 rounded-xl font-bold shadow-lg transition-all hover:scale-105"
+        >
+          ← Назад в меню
+        </button>
+        <BuildGame />
+      </div>
+    );
+  }
+
+  if (gameMode === 'analyze') {
+    return (
+      <div>
+        <button
+          onClick={() => setGameMode('menu')}
+          className="fixed top-4 left-4 z-50 px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 rounded-xl font-bold shadow-lg transition-all hover:scale-105"
+        >
+          ← Назад в меню
+        </button>
+        <MorphemeAnalysisGame />
+      </div>
+    );
+  }
+
+  if (gameMode === 'analyze2') {
+    return (
+      <div>
+        <button
+          onClick={() => setGameMode('menu')}
+          className="fixed top-4 left-4 z-50 px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 rounded-xl font-bold shadow-lg transition-all hover:scale-105"
+        >
+          ← Назад в меню
+        </button>
+        <MorphemeAnalysisLevel2 />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500 p-4 flex items-center justify-center">
+      <div className="max-w-4xl w-full">
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-6xl font-bold text-white mb-4">
+            🧪 МорфоЛаб
+          </h1>
+          <p className="text-2xl text-white/90">
+            Интерактивная платформа для изучения морфологии
+          </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            whileHover={{ scale: 1.05, y: -10 }}
+            onClick={() => setGameMode('build')}
+            className="bg-white rounded-3xl p-8 shadow-2xl cursor-pointer transform transition-all"
+          >
+            <div className="text-6xl mb-4 text-center">🔨</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              Собрать морфемки
+            </h2>
+            <p className="text-gray-600 text-center mb-6 text-sm">
+              Составляй слова из морфем как из пазлов! Перетаскивай приставки, корни, суффиксы и окончания.
+            </p>
+            <div className="flex justify-center gap-2 mb-6 flex-wrap">
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
+                Drag & Drop
+              </span>
+              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
+                10 уровней
+              </span>
+            </div>
+            <button className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold text-base shadow-lg transition-all">
+              Начать →
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.05, y: -10 }}
+            onClick={() => setGameMode('analyze')}
+            className="bg-white rounded-3xl p-8 shadow-2xl cursor-pointer transform transition-all"
+          >
+            <div className="text-6xl mb-4 text-center">🔍</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              Разбор: Уровень 1
+            </h2>
+            <p className="text-gray-600 text-center mb-6 text-sm">
+              Определяй части готового слова! Нажимай на каждую морфему и выбирай её тип.
+            </p>
+            <div className="flex justify-center gap-2 mb-6 flex-wrap">
+              <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium">
+                Блоки
+              </span>
+              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium">
+                12 слов
+              </span>
+            </div>
+            <button className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold text-base shadow-lg transition-all">
+              Начать →
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.05, y: -10 }}
+            onClick={() => setGameMode('analyze2')}
+            className="bg-white rounded-3xl p-8 shadow-2xl cursor-pointer transform transition-all"
+          >
+            <div className="text-6xl mb-4 text-center">✨</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              Разбор: Уровень 2
+            </h2>
+            <p className="text-gray-600 text-center mb-6 text-sm">
+              Выделяй буквы сам! Кликай на буквы по порядку и группируй их в морфемы.
+            </p>
+            <div className="flex justify-center gap-2 mb-6 flex-wrap">
+              <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-lg text-xs font-medium">
+                По буквам
+              </span>
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium">
+                12 слов
+              </span>
+            </div>
+            <button className="w-full py-3 bg-gradient-to-r from-indigo-500 to-pink-600 hover:from-indigo-600 hover:to-pink-700 text-white rounded-xl font-bold text-base shadow-lg transition-all">
+              Начать →
+            </button>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-12 text-center text-white/80"
+        >
+          <p className="text-lg">
+            Выбери игру, чтобы начать изучение морфологии русского языка!
+          </p>
+        </motion.div>
+      </div>
+    </div>
   );
 }
