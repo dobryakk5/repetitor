@@ -343,34 +343,6 @@ export default function MorphoLabMain() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             whileHover={{ scale: 1.05, y: -10 }}
-            onClick={() => setGameMode('build')}
-            className="bg-white rounded-3xl p-8 shadow-2xl cursor-pointer transform transition-all"
-          >
-            <div className="text-6xl mb-4 text-center">🔨</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-              Собрать морфемки
-            </h2>
-            <p className="text-gray-600 text-center mb-6 text-sm">
-              Составляй слова из морфем как из пазлов! Перетаскивай приставки, корни, суффиксы и окончания.
-            </p>
-            <div className="flex justify-center gap-2 mb-6 flex-wrap">
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
-                Drag & Drop
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
-                10 уровней
-              </span>
-            </div>
-            <button className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold text-base shadow-lg transition-all">
-              Начать →
-            </button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.05, y: -10 }}
             onClick={() => setGameMode('analyze')}
             className="bg-white rounded-3xl p-8 shadow-2xl cursor-pointer transform transition-all"
           >
@@ -395,9 +367,9 @@ export default function MorphoLabMain() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
             whileHover={{ scale: 1.05, y: -10 }}
             onClick={() => setGameMode('analyze2')}
             className="bg-white rounded-3xl p-8 shadow-2xl cursor-pointer transform transition-all"
@@ -421,6 +393,34 @@ export default function MorphoLabMain() {
               Начать →
             </button>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.05, y: -10 }}
+            onClick={() => setGameMode('build')}
+            className="bg-white rounded-3xl p-8 shadow-2xl cursor-pointer transform transition-all"
+          >
+            <div className="text-6xl mb-4 text-center">🧩</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              Угадай слово: Уровень 3
+            </h2>
+            <p className="text-gray-600 text-center mb-6 text-sm">
+              Собирай слово по смыслу! Перетаскивай морфемы и угадывай правильный ответ.
+            </p>
+            <div className="flex justify-center gap-2 mb-6 flex-wrap">
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
+                Drag & Drop
+              </span>
+              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
+                Угадай слово
+              </span>
+            </div>
+            <button className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold text-base shadow-lg transition-all">
+              Начать →
+            </button>
+          </motion.div>
         </div>
 
         <motion.div
@@ -430,7 +430,7 @@ export default function MorphoLabMain() {
           className="mt-12 text-center text-white/80"
         >
           <p className="text-lg">
-            Выбери игру, чтобы начать изучение морфологии русского языка!
+            Выбери уровень, чтобы начать изучение морфологии русского языка!
           </p>
         </motion.div>
       </div>
