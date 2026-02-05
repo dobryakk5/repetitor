@@ -144,6 +144,14 @@
             gap: 24px;
         }
 
+        .analysis-panel.stacked {
+            grid-template-columns: 1fr;
+        }
+
+        .analysis-panel.stacked .types-card {
+            margin-top: 20px;
+        }
+
         .panel-card {
             background: white;
             border-radius: 24px;
@@ -347,19 +355,20 @@
         .letters {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
             margin-bottom: 16px;
         }
 
         .letter {
-            width: 48px;
-            height: 48px;
+            width: 96px;
+            height: 96px;
             border-radius: 14px;
             border: 3px solid transparent;
             background: #e5e7eb;
             color: #111827;
             font-weight: 800;
+            font-size: 32px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -375,6 +384,18 @@
         .letter.locked {
             color: white;
             cursor: default;
+        }
+
+        .morpheme-merged {
+            padding: 20px 28px;
+            border-radius: 18px;
+            color: white;
+            font-weight: 800;
+            font-size: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         @media (max-width: 980px) {
@@ -453,7 +474,7 @@
             </div>
         </div>
 
-        <div class="analysis-panel" id="level2Panel">
+        <div class="analysis-panel stacked" id="level2Panel">
             <div class="panel-card">
                 <div class="panel-title">Выдели морфемы по буквам</div>
                 <div class="panel-desc">Выделяй буквы подряд, затем выбирай тип морфемы.</div>
@@ -466,12 +487,11 @@
                 <div class="letters" id="level2Letters"></div>
                 <div class="status" id="level2Status"></div>
                 <div class="feedback" id="level2Feedback"></div>
-            </div>
-
-            <div class="types-card">
-                <div class="types-title">Выбери тип морфемы</div>
-                <div class="type-buttons" id="level2Types"></div>
-                <button class="next-btn" id="level2NextBtn" disabled>Следующее слово →</button>
+                <div class="types-card" style="margin-top: 20px;">
+                    <div class="types-title">Выбери тип морфемы</div>
+                    <div class="type-buttons" id="level2Types"></div>
+                    <button class="next-btn" id="level2NextBtn" disabled>Следующее слово →</button>
+                </div>
             </div>
         </div>
     </div>
@@ -900,27 +920,39 @@
             const lettersEl = document.getElementById('level2Letters');
             lettersEl.innerHTML = '';
 
-            letters.forEach((letter, index) => {
+            let index = 0;
+            while (index < letters.length) {
+                const mergedIndex = level2State.completedMorphemes.find(
+                    (mIndex) => word.morphemes[mIndex].startIndex === index
+                );
+
+                if (mergedIndex !== undefined) {
+                    const morpheme = word.morphemes[mergedIndex];
+                    const merged = document.createElement('div');
+                    merged.className = 'morpheme-merged';
+                    merged.textContent = morpheme.text;
+                    const color = MORPHEME_TYPES.find(t => t.type === morpheme.type)?.color || '#10b981';
+                    merged.style.background = color;
+                    lettersEl.appendChild(merged);
+                    index = morpheme.endIndex + 1;
+                    continue;
+                }
+
                 const btn = document.createElement('button');
                 btn.className = 'letter';
-                btn.textContent = letter;
+                btn.textContent = letters[index];
 
                 const state = level2State.letterStates[index];
                 const isSelected = level2State.selectedLetters.includes(index);
 
-                if (state?.isCorrect === true && state.morphemeIndex !== null) {
-                    const morphemeType = word.morphemes[state.morphemeIndex]?.type;
-                    const color = MORPHEME_TYPES.find(t => t.type === morphemeType)?.color || '#10b981';
-                    btn.style.background = color;
-                    btn.classList.add('locked');
-                    btn.disabled = true;
-                } else if (isSelected) {
+                if (isSelected) {
                     btn.classList.add('selected');
                 }
 
                 btn.addEventListener('click', () => toggleLetter(index));
                 lettersEl.appendChild(btn);
-            });
+                index += 1;
+            }
 
             const isComplete = level2State.completedMorphemes.length === word.morphemes.length;
             const status = document.getElementById('level2Status');
