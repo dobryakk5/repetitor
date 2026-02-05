@@ -1,4 +1,5 @@
     let currentVariant = 0;
+    let currentTemplateVariant = 0;
     let userChoices = {};
     let completedVariants = new Set();
     let currentMode = 'parts';
@@ -6,35 +7,70 @@
     // Для морфологического разбора
     let currentMorphWord = null;
     let morphAnswers = {};
+    let activeMorphTab = null;
+    let morphDisplayMap = {};
 
     // Для синтаксического разбора (определение роли слова)
     let currentSyntaxWord = null;
     let syntaxRoleAnswers = {};
+    let currentSyntaxRoles = {};
+    let activeSyntaxTab = null;
+    let syntaxDisplayMap = {};
 
     // Для вкладки "Шаблоны"
     let selectedTemplate = null;
     let selectedVerbType = null;
     let clickedVerb = null;
 
-    // Данные (sentenceVariants, wordData, morphologyFields, abbreviations, 
-    // sentenceTemplates, verbTypes) загружаются из файла data.js
+    // Данные (sentenceVariants, wordData, analysisTemplates, abbreviations,
+    // templateVariants, sentenceTemplates, verbTypes) загружаются из файла data.js
 
     // ===== ОСНОВНЫЕ ФУНКЦИИ =====
 
-    function init() {
-        loadVariant();
-        createVariantButtons();
-        updateVariantButtons();
-        loadTemplateTab();
-        loadSyntaxTab();
-        loadMorphologyTab();
+    function normalizeWord(word) {
+        return word.replace(/[.,!?;:]+$/g, '').toLowerCase();
     }
 
-    function createVariantButtons() {
+    function splitSentence(sentence) {
+        return sentence.trim().split(/\s+/);
+    }
+
+    function getSentenceWordList(sentence) {
+        return splitSentence(sentence).map((word, idx) => {
+            const clean = word.replace(/[.,!?;:]+$/g, '');
+            const punctuation = word.slice(clean.length);
+            return {
+                key: clean.toLowerCase(),
+                display: clean,
+                punctuation,
+                index: idx
+            };
+        });
+    }
+
+    function getActiveVariants(mode = currentMode) {
+        return mode === 'templates' ? templateVariants : sentenceVariants;
+    }
+
+    function getActiveVariantIndex(mode = currentMode) {
+        return mode === 'templates' ? currentTemplateVariant : currentVariant;
+    }
+
+    function updateVariantInfo(mode = currentMode) {
+        const variants = getActiveVariants(mode);
+        const index = getActiveVariantIndex(mode);
+        const info = document.getElementById('variant-info');
+        if (info) {
+            info.textContent = `Вариант ${index + 1} из ${variants.length}`;
+        }
+    }
+
+    function renderVariantGrid(mode = currentMode) {
+        const variants = getActiveVariants(mode);
         const grid = document.getElementById('variant-grid');
         grid.innerHTML = '';
-        
-        sentenceVariants.forEach((_, index) => {
+
+        variants.forEach((_, index) => {
             const btn = document.createElement('button');
             btn.className = 'variant-btn';
             btn.id = `variant-${index}`;
@@ -42,8 +78,34 @@
                 <span class="check-mark" id="check-${index}"></span>
                 ${index + 1}
             `;
-            btn.onclick = () => switchVariant(index);
+            btn.onclick = () => {
+                if (mode === 'templates') {
+                    switchTemplateVariant(index);
+                } else {
+                    switchVariant(index);
+                }
+            };
             grid.appendChild(btn);
+        });
+
+        updateVariantButtons(mode);
+    }
+
+    function init() {
+        renderVariantGrid(currentMode);
+        loadVariant();
+        loadSyntaxTab();
+        loadMorphologyTab();
+        loadTemplateTab();
+        updateVariantInfo();
+        initPartButtons();
+    }
+
+    function initPartButtons() {
+        document.querySelectorAll('.part-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectPart(btn.getAttribute('data-part'));
+            });
         });
     }
 
@@ -51,141 +113,221 @@
         currentVariant = index;
         resetVariant();
         loadVariant();
-        loadTemplateTab();
         loadSyntaxTab();
         loadMorphologyTab();
-        updateVariantButtons();
+        updateVariantButtons('parts');
+        updateVariantInfo('parts');
+    }
+
+    function switchTemplateVariant(index) {
+        currentTemplateVariant = index;
+        resetTemplateState();
+        loadTemplateTab();
+        updateVariantButtons('templates');
+        updateVariantInfo('templates');
     }
 
     function loadVariant() {
         const variant = sentenceVariants[currentVariant];
-        document.getElementById('variant-info').textContent = `Вариант ${currentVariant + 1} из ${sentenceVariants.length}`;
+        updateVariantInfo('parts');
         
         const sentenceDiv = document.getElementById('sentence');
-        const words = variant.sentence.split(' ');
+        const words = getSentenceWordList(variant.sentence);
         
-        sentenceDiv.innerHTML = words.map((word, idx) => {
-            const cleanWord = word.replace(/[.,!?;:]$/, '');
-            const punctuation = word.slice(cleanWord.length);
+        sentenceDiv.innerHTML = words.map((word) => {
+            const cleanWord = word.key;
             
             if (variant.correct[cleanWord]) {
-                return `<span class="word" data-word="${cleanWord}" data-index="${idx}" onclick="selectWord('${cleanWord}')">${cleanWord}</span>${punctuation}`;
+                return `<span class="word" data-word="${cleanWord}" data-index="${word.index}" onclick="selectWord('${cleanWord}')">${word.display}</span>${word.punctuation}`;
             }
-            return word;
+            return `${word.display}${word.punctuation}`;
         }).join(' ');
-
-        const optionsDiv = document.getElementById('options');
-        const parts = [...new Set(Object.values(variant.correct))];
-        
-        optionsDiv.innerHTML = parts.map(part => `
-            <div class="option" data-part="${part}" onclick="selectPart('${part}')">
-                <div class="option-icon">${getIcon(part)}</div>
-                <div>${part}</div>
-            </div>
-        `).join('');
 
         document.getElementById('result-message').style.display = 'none';
         document.getElementById('check-btn').disabled = false;
     }
 
+    function buildSyntaxRoles(variant) {
+        if (variant.syntaxRoles) {
+            return variant.syntaxRoles;
+        }
+
+        const roles = {};
+        const allowedRoles = new Set(CONFIG.syntaxRoles || []);
+        const words = getSentenceWordList(variant.sentence);
+        words.forEach(word => {
+            if (wordData[word.key] && wordData[word.key].type !== undefined) {
+                const role = wordData[word.key].type;
+                roles[word.key] = allowedRoles.has(role) ? role : null;
+            } else {
+                roles[word.key] = null;
+            }
+        });
+        return roles;
+    }
+
     function loadSyntaxTab() {
         const variant = sentenceVariants[currentVariant];
+        currentSyntaxRoles = buildSyntaxRoles(variant);
         
         const syntaxSentenceDiv = document.getElementById('syntax-sentence');
-        const words = variant.sentence.split(' ');
-        
-        syntaxSentenceDiv.innerHTML = words.map((word, idx) => {
-            const cleanWord = word.replace(/[.,!?;:]$/, '');
-            const punctuation = word.slice(cleanWord.length);
-            
-            if (variant.syntaxRoles[cleanWord] !== undefined) {
-                return `<span class="word" data-word="${cleanWord}" data-index="${idx}">${cleanWord}</span>${punctuation}`;
+        const words = getSentenceWordList(variant.sentence);
+
+        syntaxDisplayMap = {};
+        syntaxSentenceDiv.innerHTML = words.map((word) => {
+            if (!syntaxDisplayMap[word.key]) {
+                syntaxDisplayMap[word.key] = word.display;
             }
-            return word;
+            if (currentSyntaxRoles[word.key] !== null && currentSyntaxRoles[word.key] !== undefined) {
+                return `<span class="word" data-word="${word.key}" data-index="${word.index}" onclick="selectSyntaxWord('${word.key}')">${word.display}</span>${word.punctuation}`;
+            }
+            return `${word.display}${word.punctuation}`;
         }).join(' ');
 
-        const syntaxWordsDiv = document.getElementById('syntax-words');
-        const syntaxWords = Object.keys(variant.syntaxRoles).filter(w => variant.syntaxRoles[w] !== null);
-        
-        syntaxWordsDiv.innerHTML = syntaxWords.map(word => 
-            `<button class="syntax-word-btn" data-word="${word}" onclick="selectSyntaxWord('${word}')">${word}</button>`
-        ).join('');
+        const tabsContainer = document.getElementById('syntax-tabs-container');
+        const panelsContainer = document.getElementById('syntax-panels');
+        if (tabsContainer) tabsContainer.innerHTML = '';
+        if (panelsContainer) panelsContainer.innerHTML = '';
+        activeSyntaxTab = null;
+        currentSyntaxWord = null;
 
         document.getElementById('syntax-result-message').style.display = 'none';
-        document.getElementById('syntax-check-btn').disabled = false;
+        const syntaxCheckBtn = document.getElementById('syntax-check-btn');
+        if (syntaxCheckBtn) syntaxCheckBtn.disabled = false;
     }
 
     function loadMorphologyTab() {
         const variant = sentenceVariants[currentVariant];
         
         const morphSentenceDiv = document.getElementById('morph-sentence');
-        const words = variant.sentence.split(' ');
-        
-        morphSentenceDiv.innerHTML = words.map((word, idx) => {
-            const cleanWord = word.replace(/[.,!?;:]$/, '');
-            const punctuation = word.slice(cleanWord.length);
-            
-            if (wordData[cleanWord]) {
-                return `<span class="word" data-word="${cleanWord}" data-index="${idx}">${cleanWord}</span>${punctuation}`;
+        const words = getSentenceWordList(variant.sentence);
+
+        morphDisplayMap = {};
+        morphSentenceDiv.innerHTML = words.map((word) => {
+            if (wordData[word.key]) {
+                if (!morphDisplayMap[word.key]) {
+                    morphDisplayMap[word.key] = word.display;
+                }
+                return `<span class="word" data-word="${word.key}" data-index="${word.index}" onclick="selectMorphWord('${word.key}')">${word.display}</span>${word.punctuation}`;
             }
-            return word;
+            return `${word.display}${word.punctuation}`;
         }).join(' ');
 
-        const morphWordsDiv = document.getElementById('morph-words');
-        const morphWords = Object.keys(wordData);
-        
-        morphWordsDiv.innerHTML = morphWords.map(word => 
-            `<button class="morph-word-btn" data-word="${word}" onclick="selectMorphWord('${word}')">${word}</button>`
-        ).join('');
+        const tabsContainer = document.getElementById('tabs-container');
+        const panelsContainer = document.getElementById('analysis-panels');
+        if (tabsContainer) tabsContainer.innerHTML = '';
+        if (panelsContainer) panelsContainer.innerHTML = '';
+        activeMorphTab = null;
 
         document.getElementById('morph-result-message').style.display = 'none';
-        document.getElementById('morph-check-btn').disabled = false;
     }
 
     function selectSyntaxWord(word) {
         currentSyntaxWord = word;
-        
-        document.querySelectorAll('.syntax-word-btn').forEach(btn => {
-            btn.classList.remove('selected');
-            if (btn.getAttribute('data-word') === word) {
-                btn.classList.add('selected');
-            }
-        });
+        document.querySelectorAll('#syntax-sentence .word').forEach(w => w.classList.remove('selected'));
+        const wordEl = document.querySelector(`#syntax-sentence .word[data-word="${word}"]`);
+        if (wordEl) wordEl.classList.add('selected');
 
-        const panel = document.getElementById('syntax-role-panel');
-        panel.classList.add('active');
-        
-        document.getElementById('syntax-current-word').textContent = word;
-        
-        const roleOptions = CONFIG.syntaxRoles;
-        const roleOptionsDiv = document.getElementById('syntax-role-options');
-        
-        roleOptionsDiv.innerHTML = roleOptions.map(role => 
-            `<button class="syntax-role-option" data-role="${role}" onclick="selectSyntaxRole('${word}', '${role}')">${role}</button>`
-        ).join('');
+        const tabsContainer = document.getElementById('syntax-tabs-container');
+        const existingTab = document.getElementById(`syntax-tab-${word}`);
 
-        if (syntaxRoleAnswers[word]) {
-            const selectedBtn = roleOptionsDiv.querySelector(`[data-role="${syntaxRoleAnswers[word]}"]`);
-            if (selectedBtn) selectedBtn.classList.add('selected');
+        if (!existingTab) {
+            createSyntaxTab(word, tabsContainer);
         }
 
+        activateSyntaxTab(word);
         updateSyntaxWordVisuals();
+    }
+
+    function createSyntaxTab(word, tabsContainer) {
+        if (!tabsContainer) return;
+
+        const label = syntaxDisplayMap[word] || word;
+        const tab = document.createElement('button');
+        tab.className = 'tab';
+        tab.id = `syntax-tab-${word}`;
+        tab.textContent = label;
+        tab.addEventListener('click', () => activateSyntaxTab(word));
+        tabsContainer.appendChild(tab);
+
+        createSyntaxPanel(word);
+    }
+
+    function activateSyntaxTab(word) {
+        document.querySelectorAll('#syntax-tabs-container .tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#syntax-panels .analysis-container').forEach(p => p.classList.remove('active'));
+
+        const tab = document.getElementById(`syntax-tab-${word}`);
+        const panel = document.getElementById(`syntax-panel-${word}`);
+
+        if (tab) tab.classList.add('active');
+        if (panel) panel.classList.add('active');
+
+        activeSyntaxTab = word;
+        currentSyntaxWord = word;
+
+        const selectedRole = syntaxRoleAnswers[word];
+        if (selectedRole) {
+            highlightSyntaxRole(word, selectedRole);
+        }
+    }
+
+    function createSyntaxPanel(word) {
+        const panelsContainer = document.getElementById('syntax-panels');
+        if (!panelsContainer) return;
+
+        const panel = document.createElement('div');
+        panel.className = 'analysis-container';
+        panel.id = `syntax-panel-${word}`;
+
+        const roleOptions = CONFIG.syntaxRoles || [];
+        const label = syntaxDisplayMap[word] || word;
+
+        panel.innerHTML = `
+            <div class="section">
+                <div class="section-title">Роль слова: ${label}</div>
+                <div class="syntax-role-options">
+                    ${roleOptions.map(role => `
+                        <button class="syntax-role-option" data-role="${role}" onclick="selectSyntaxRole('${word}', '${role}')">${role}</button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        panelsContainer.appendChild(panel);
+    }
+
+    function highlightSyntaxRole(word, role) {
+        const panel = document.getElementById(`syntax-panel-${word}`);
+        if (!panel) return;
+
+        panel.querySelectorAll('.syntax-role-option').forEach(btn => {
+            btn.classList.remove('selected', 'correct', 'incorrect');
+        });
+
+        const selectedBtn = panel.querySelector(`.syntax-role-option[data-role="${role}"]`);
+        if (!selectedBtn) return;
+
+        selectedBtn.classList.add('selected');
+        const correctRole = currentSyntaxRoles[word];
+        if (correctRole) {
+            if (role === correctRole) {
+                selectedBtn.classList.add('correct');
+            } else {
+                selectedBtn.classList.add('incorrect');
+            }
+        }
     }
 
     function selectSyntaxRole(word, role) {
         syntaxRoleAnswers[word] = role;
-        
-        document.querySelectorAll('#syntax-role-options .syntax-role-option').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        
-        const selectedBtn = document.querySelector(`#syntax-role-options [data-role="${role}"]`);
-        if (selectedBtn) selectedBtn.classList.add('selected');
+        highlightSyntaxRole(word, role);
 
         updateSyntaxWordVisuals();
         
         document.getElementById('syntax-result-message').style.display = 'none';
-        document.getElementById('syntax-check-btn').disabled = false;
+        const syntaxCheckBtn = document.getElementById('syntax-check-btn');
+        if (syntaxCheckBtn) syntaxCheckBtn.disabled = false;
     }
 
     function updateSyntaxWordVisuals() {
@@ -200,22 +342,17 @@
     }
 
     function checkSyntaxRoles() {
-        const variant = sentenceVariants[currentVariant];
         const resultMsg = document.getElementById('syntax-result-message');
         let errors = 0;
         let notProcessed = 0;
         
-        const wordsToCheck = Object.keys(variant.syntaxRoles).filter(w => variant.syntaxRoles[w] !== null);
+        const wordsToCheck = Object.keys(currentSyntaxRoles).filter(w => currentSyntaxRoles[w] !== null);
         const total = wordsToCheck.length;
-
-        document.querySelectorAll('#syntax-role-options .syntax-role-option').forEach(opt => {
-            opt.classList.remove('correct', 'incorrect');
-        });
 
         for (let word of wordsToCheck) {
             if (!syntaxRoleAnswers[word]) {
                 notProcessed++;
-            } else if (syntaxRoleAnswers[word] !== variant.syntaxRoles[word]) {
+            } else if (syntaxRoleAnswers[word] !== currentSyntaxRoles[word]) {
                 errors++;
             }
         }
@@ -228,16 +365,12 @@
             resultMsg.className = 'result-message success';
             resultMsg.textContent = '🎉 Отлично! Все роли определены правильно!';
             resultMsg.style.display = 'block';
-            document.getElementById('syntax-check-btn').disabled = true;
+            const syntaxCheckBtn = document.getElementById('syntax-check-btn');
+            if (syntaxCheckBtn) syntaxCheckBtn.disabled = true;
 
             if (currentSyntaxWord) {
-                const correctRole = variant.syntaxRoles[currentSyntaxWord];
-                document.querySelectorAll('#syntax-role-options .syntax-role-option').forEach(opt => {
-                    const role = opt.getAttribute('data-role');
-                    if (role === correctRole) {
-                        opt.classList.add('correct');
-                    }
-                });
+                const correctRole = currentSyntaxRoles[currentSyntaxWord];
+                highlightSyntaxRole(currentSyntaxWord, correctRole);
             }
         } else {
             resultMsg.className = 'result-message error';
@@ -246,16 +379,28 @@
 
             if (currentSyntaxWord) {
                 const userRole = syntaxRoleAnswers[currentSyntaxWord];
-                const correctRole = variant.syntaxRoles[currentSyntaxWord];
-                
-                document.querySelectorAll('#syntax-role-options .syntax-role-option').forEach(opt => {
-                    const role = opt.getAttribute('data-role');
-                    if (role === correctRole) {
-                        opt.classList.add('correct');
-                    } else if (role === userRole) {
-                        opt.classList.add('incorrect');
+                const correctRole = currentSyntaxRoles[currentSyntaxWord];
+                const panel = document.getElementById(`syntax-panel-${currentSyntaxWord}`);
+                if (panel) {
+                    panel.querySelectorAll('.syntax-role-option').forEach(opt => {
+                        opt.classList.remove('selected', 'correct', 'incorrect');
+                    });
+
+                    if (correctRole) {
+                        const correctBtn = panel.querySelector(`.syntax-role-option[data-role="${correctRole}"]`);
+                        if (correctBtn) correctBtn.classList.add('correct');
                     }
-                });
+
+                    if (userRole) {
+                        const userBtn = panel.querySelector(`.syntax-role-option[data-role="${userRole}"]`);
+                        if (userBtn) {
+                            userBtn.classList.add('selected');
+                            if (userRole !== correctRole) {
+                                userBtn.classList.add('incorrect');
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -263,14 +408,17 @@
     function resetSyntaxRoles() {
         syntaxRoleAnswers = {};
         currentSyntaxWord = null;
+        currentSyntaxRoles = {};
+        activeSyntaxTab = null;
         
-        document.querySelectorAll('.syntax-word-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        
-        document.getElementById('syntax-role-panel').classList.remove('active');
+        const tabsContainer = document.getElementById('syntax-tabs-container');
+        const panelsContainer = document.getElementById('syntax-panels');
+        if (tabsContainer) tabsContainer.innerHTML = '';
+        if (panelsContainer) panelsContainer.innerHTML = '';
+
         document.getElementById('syntax-result-message').style.display = 'none';
-        document.getElementById('syntax-check-btn').disabled = false;
+        const syntaxCheckBtn = document.getElementById('syntax-check-btn');
+        if (syntaxCheckBtn) syntaxCheckBtn.disabled = false;
         
         document.querySelectorAll('#syntax-sentence .word').forEach(wordEl => {
             wordEl.className = 'word';
@@ -279,42 +427,120 @@
 
     function selectMorphWord(word) {
         currentMorphWord = word;
-        
-        document.querySelectorAll('.morph-word-btn').forEach(btn => {
-            btn.classList.remove('selected');
-            if (btn.getAttribute('data-word') === word) {
-                btn.classList.add('selected');
-            }
-        });
 
-        const analysis = document.getElementById('morph-analysis');
-        analysis.classList.add('active');
-        
-        document.getElementById('morph-current-word').textContent = word;
-        
-        const data = wordData[word];
-        const partOfSpeech = data.analysis['Часть речи'];
-        const fields = morphologyFields[partOfSpeech] || morphologyFields['существительное'];
-        
-        const fieldsDiv = document.getElementById('morph-fields');
-        fieldsDiv.innerHTML = fields.map(field => `
-            <div class="morph-field">
-                <label>${field.name}:</label>
-                <div class="morph-options">
-                    ${field.options.map(opt => 
-                        `<button class="morph-option" 
-                                data-field="${field.name}" 
-                                data-value="${opt}"
-                                onclick="selectMorphOption('${word}', '${field.name}', '${opt}')">${opt}</button>`
-                    ).join('')}
-                </div>
-            </div>
-        `).join('');
+        document.querySelectorAll('#morph-sentence .word').forEach(w => w.classList.remove('selected'));
+        const wordEl = document.querySelector(`#morph-sentence .word[data-word="${word}"]`);
+        if (wordEl) wordEl.classList.add('selected');
+
+        const tabsContainer = document.getElementById('tabs-container');
+        const existingTab = document.getElementById(`tab-${word}`);
+
+        if (!existingTab) {
+            createMorphTab(word, tabsContainer);
+        }
+
+        activateMorphTab(word);
+
+        const resultMsg = document.getElementById('morph-result-message');
+        if (resultMsg) resultMsg.style.display = 'none';
+    }
+
+    function createMorphTab(word, tabsContainer) {
+        if (!tabsContainer) return;
+
+        const label = morphDisplayMap[word] || word;
+        const tab = document.createElement('button');
+        tab.className = 'tab';
+        tab.id = `tab-${word}`;
+        tab.textContent = label;
+        tab.addEventListener('click', () => activateMorphTab(word));
+        tabsContainer.appendChild(tab);
+
+        createMorphPanel(word);
+    }
+
+    function activateMorphTab(word) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.analysis-container').forEach(p => p.classList.remove('active'));
+
+        const tab = document.getElementById(`tab-${word}`);
+        const panel = document.getElementById(`panel-${word}`);
+
+        if (tab) tab.classList.add('active');
+        if (panel) panel.classList.add('active');
+
+        activeMorphTab = word;
+    }
+
+    function createMorphPanel(word) {
+        const panelsContainer = document.getElementById('analysis-panels');
+        if (!panelsContainer) return;
+
+        const panel = document.createElement('div');
+        panel.className = 'analysis-container';
+        panel.id = `panel-${word}`;
+
+        panel.innerHTML = buildMorphFieldsMarkup(word);
+        panelsContainer.appendChild(panel);
 
         if (morphAnswers[word]) {
             for (let prop in morphAnswers[word]) {
-                const btn = fieldsDiv.querySelector(`[data-field="${prop}"][data-value="${morphAnswers[word][prop]}"]`);
-                if (btn) btn.classList.add('selected');
+                updateMorphFieldButtons(word, prop);
+            }
+        }
+    }
+
+    function buildMorphFieldsMarkup(word) {
+        const data = wordData[word];
+        const partOfSpeech = (data && data.part) ? data.part : 'существительное';
+        const fields = analysisTemplates[partOfSpeech] || analysisTemplates['существительное'];
+
+        if (!fields || fields.length === 0) {
+            return `
+                <div class="section">
+                    <div class="section-title">Морфологический разбор</div>
+                    <div>Для этого слова морфологический разбор не требуется.</div>
+                </div>
+            `;
+        }
+
+        return fields.map(field => `
+            <div class="section" data-prop="${field.prop}">
+                <div class="section-title">${field.title}</div>
+                <div class="btn-group">
+                    ${field.options.map(opt => `
+                        <button class="option"
+                                data-field="${field.prop}"
+                                data-value="${opt}"
+                                onclick="selectMorphOption('${word}', '${field.prop}', '${opt}')">${opt}</button>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateMorphFieldButtons(word, field) {
+        const panel = document.getElementById(`panel-${word}`);
+        if (!panel) return;
+
+        panel.querySelectorAll(`.option[data-field="${field}"]`).forEach(btn => {
+            btn.classList.remove('active', 'option-correct', 'option-incorrect');
+        });
+
+        const value = morphAnswers[word] ? morphAnswers[word][field] : null;
+        if (!value) return;
+
+        const selectedBtn = panel.querySelector(`.option[data-field="${field}"][data-value="${value}"]`);
+        if (!selectedBtn) return;
+
+        selectedBtn.classList.add('active');
+
+        const correctValue = wordData[word] && wordData[word].analysis ? wordData[word].analysis[field] : null;
+        if (correctValue) {
+            if (value === correctValue) {
+                selectedBtn.classList.add('option-correct');
+            } else {
+                selectedBtn.classList.add('option-incorrect');
             }
         }
     }
@@ -324,29 +550,76 @@
             morphAnswers[word] = {};
         }
         morphAnswers[word][field] = value;
-        
-        document.querySelectorAll(`[data-field="${field}"]`).forEach(btn => {
-            btn.classList.remove('selected', 'correct', 'incorrect');
+
+        updateMorphFieldButtons(word, field);
+
+        evaluateMorphologyProgress();
+    }
+
+    function evaluateMorphologyProgress() {
+        const variant = sentenceVariants[currentVariant];
+        const resultMsg = document.getElementById('morph-result-message');
+
+        const wordsInSentence = getSentenceWordList(variant.sentence)
+            .map(word => word.key)
+            .filter((word, idx, arr) => arr.indexOf(word) === idx);
+
+        const wordsToCheck = wordsInSentence.filter(word => {
+            return wordData[word] && wordData[word].analysis && Object.keys(wordData[word].analysis).length > 0;
         });
-        
-        const selectedBtn = document.querySelector(`[data-field="${field}"][data-value="${value}"]`);
-        if (selectedBtn) selectedBtn.classList.add('selected');
-        
-        document.getElementById('morph-result-message').style.display = 'none';
-        document.getElementById('morph-check-btn').disabled = false;
+
+        if (wordsToCheck.length === 0) {
+            resultMsg.style.display = 'none';
+            return;
+        }
+
+        let processedWords = 0;
+        let errors = 0;
+
+        for (let word of wordsToCheck) {
+            if (morphAnswers[word]) {
+                processedWords++;
+                const correctAnswers = wordData[word].analysis;
+                const userAnswers = morphAnswers[word];
+
+                for (let prop in correctAnswers) {
+                    if (userAnswers[prop] !== correctAnswers[prop]) {
+                        errors++;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (processedWords < wordsToCheck.length) {
+            resultMsg.style.display = 'none';
+            return;
+        }
+
+        if (errors === 0) {
+            resultMsg.className = 'result-message success';
+            resultMsg.textContent = `🎉 Отлично! Все ${wordsToCheck.length} слов разобраны правильно!`;
+            resultMsg.style.display = 'block';
+        } else {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Есть ошибки. Проверьте параметры, отмеченные красным.`;
+            resultMsg.style.display = 'block';
+        }
     }
 
     function resetMorphology() {
         morphAnswers = {};
         currentMorphWord = null;
+        activeMorphTab = null;
         
-        document.querySelectorAll('.morph-word-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        
-        document.getElementById('morph-analysis').classList.remove('active');
+        const tabsContainer = document.getElementById('tabs-container');
+        const panelsContainer = document.getElementById('analysis-panels');
+        if (tabsContainer) tabsContainer.innerHTML = '';
+        if (panelsContainer) panelsContainer.innerHTML = '';
+
+        document.querySelectorAll('#morph-sentence .word').forEach(w => w.classList.remove('selected'));
+
         document.getElementById('morph-result-message').style.display = 'none';
-        document.getElementById('morph-check-btn').disabled = false;
     }
 
     function getIcon(part) {
@@ -361,28 +634,58 @@
         
         document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
         document.querySelector(`[data-word="${word}"]`).classList.add('selected');
+        document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
         
         if (selectedPart) {
-            applyPartOfSpeech(selectedWord, selectedPart);
+            const wordToApply = selectedWord;
+            const partToApply = selectedPart;
+            const btnEl = document.querySelector(`.part-btn[data-part="${partToApply}"]`);
+            const variant = sentenceVariants[currentVariant];
+
+            applyPartOfSpeech(wordToApply, partToApply);
+
+            if (btnEl) {
+                btnEl.classList.add('active');
+                if (variant.correct[wordToApply]) {
+                    if (partToApply === variant.correct[wordToApply]) {
+                        btnEl.classList.add('part-correct');
+                    } else {
+                        btnEl.classList.add('part-incorrect');
+                    }
+                }
+            }
+
             selectedWord = null;
             selectedPart = null;
             document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
-            document.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
         }
     }
 
     function selectPart(part) {
         selectedPart = part;
         
-        document.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
-        document.querySelector(`[data-part="${part}"]`).classList.add('active');
+        document.querySelectorAll('.part-btn').forEach(o => o.classList.remove('active', 'part-correct', 'part-incorrect'));
+        const optionEl = document.querySelector(`.part-btn[data-part="${part}"]`);
+        if (optionEl) optionEl.classList.add('active');
         
         if (selectedWord) {
-            applyPartOfSpeech(selectedWord, selectedPart);
+            const wordToApply = selectedWord;
+            const partToApply = selectedPart;
+            const variant = sentenceVariants[currentVariant];
+
+            applyPartOfSpeech(wordToApply, partToApply);
+
+            if (optionEl && variant.correct[wordToApply]) {
+                if (partToApply === variant.correct[wordToApply]) {
+                    optionEl.classList.add('part-correct');
+                } else {
+                    optionEl.classList.add('part-incorrect');
+                }
+            }
+
             selectedWord = null;
             selectedPart = null;
             document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
-            document.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
         }
     }
 
@@ -394,9 +697,6 @@
         currentMorphWord = null;
         syntaxRoleAnswers = {};
         currentSyntaxWord = null;
-        selectedTemplate = null;
-        selectedVerbType = null;
-        clickedVerb = null;
         
         document.querySelectorAll('.word').forEach(w => {
             w.classList.remove('selected', 'correct', 'incorrect', 'not-processed');
@@ -404,7 +704,7 @@
             w.removeAttribute('data-part-abbr');
         });
         
-        document.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
+        document.querySelectorAll('.part-btn').forEach(o => o.classList.remove('active', 'part-correct', 'part-incorrect'));
         
         const resultMsg = document.getElementById('result-message');
         if (resultMsg) {
@@ -415,14 +715,31 @@
         const morphResultMsg = document.getElementById('morph-result-message');
         if (morphResultMsg) {
             morphResultMsg.style.display = 'none';
-            document.getElementById('morph-check-btn').disabled = false;
         }
 
         const syntaxResultMsg = document.getElementById('syntax-result-message');
         if (syntaxResultMsg) {
             syntaxResultMsg.style.display = 'none';
-            document.getElementById('syntax-check-btn').disabled = false;
+            const syntaxCheckBtn = document.getElementById('syntax-check-btn');
+            if (syntaxCheckBtn) syntaxCheckBtn.disabled = false;
         }
+
+        const tabsContainer = document.getElementById('tabs-container');
+        const panelsContainer = document.getElementById('analysis-panels');
+        if (tabsContainer) tabsContainer.innerHTML = '';
+        if (panelsContainer) panelsContainer.innerHTML = '';
+
+        const syntaxTabsContainer = document.getElementById('syntax-tabs-container');
+        const syntaxPanelsContainer = document.getElementById('syntax-panels');
+        if (syntaxTabsContainer) syntaxTabsContainer.innerHTML = '';
+        if (syntaxPanelsContainer) syntaxPanelsContainer.innerHTML = '';
+    }
+
+    function resetTemplateState() {
+        selectedTemplate = null;
+        selectedVerbType = null;
+        clickedVerb = null;
+        resetTemplate();
     }
 
     function applyPartOfSpeech(word, part) {
@@ -468,7 +785,7 @@
             resultMsg.textContent = '🎉 Отлично! Все правильно!';
             resultMsg.style.display = 'block';
             completedVariants.add(currentVariant);
-            updateVariantButtons();
+            updateVariantButtons('parts');
             updateStats();
             document.getElementById('check-btn').disabled = true;
             
@@ -480,40 +797,54 @@
         }
     }
 
-    function updateVariantButtons() {
-        sentenceVariants.forEach((_, index) => {
+    function updateVariantButtons(mode = currentMode) {
+        const variants = getActiveVariants(mode);
+        const currentIndex = getActiveVariantIndex(mode);
+
+        variants.forEach((_, index) => {
             const btn = document.getElementById(`variant-${index}`);
             const check = document.getElementById(`check-${index}`);
-            
+
+            if (!btn) return;
+
             btn.classList.remove('active', 'completed');
-            
-            if (index === currentVariant) {
+
+            if (index === currentIndex) {
                 btn.classList.add('active');
             }
-            
-            if (completedVariants.has(index)) {
+
+            if (mode !== 'templates' && completedVariants.has(index)) {
                 btn.classList.add('completed');
-                check.textContent = '✓';
-            } else {
+                if (check) check.textContent = '✓';
+            } else if (check) {
                 check.textContent = '';
             }
         });
     }
 
     function checkMorphology() {
+        const variant = sentenceVariants[currentVariant];
         const resultMsg = document.getElementById('morph-result-message');
         let totalWords = 0;
         let correctWords = 0;
         let processedWords = 0;
-        
-        for (let word in wordData) {
+
+        const wordsInSentence = getSentenceWordList(variant.sentence)
+            .map(word => word.key)
+            .filter((word, idx, arr) => arr.indexOf(word) === idx);
+
+        const wordsToCheck = wordsInSentence.filter(word => {
+            return wordData[word] && wordData[word].analysis && Object.keys(wordData[word].analysis).length > 0;
+        });
+
+        for (let word of wordsToCheck) {
             totalWords++;
-            
+
             if (morphAnswers[word]) {
                 processedWords++;
                 const correctAnswers = wordData[word].analysis;
                 const userAnswers = morphAnswers[word];
-                
+
                 let wordCorrect = true;
                 for (let prop in correctAnswers) {
                     if (userAnswers[prop] !== correctAnswers[prop]) {
@@ -521,7 +852,7 @@
                         break;
                     }
                 }
-                
+
                 if (wordCorrect && Object.keys(userAnswers).length === Object.keys(correctAnswers).length) {
                     correctWords++;
                 }
@@ -539,7 +870,6 @@
             resultMsg.className = 'result-message success';
             resultMsg.textContent = `🎉 Отлично! Все ${totalWords} слов разобраны правильно!`;
             resultMsg.style.display = 'block';
-            document.getElementById('morph-check-btn').disabled = true;
         } else {
             resultMsg.className = 'result-message error';
             resultMsg.textContent = `Обработано слов: ${processedWords} из ${totalWords}. Правильно разобрано: ${correctWords}. Неправильные параметры отмечены красным.`;
@@ -549,26 +879,29 @@
         if (currentMorphWord && morphAnswers[currentMorphWord]) {
             const correctAnswers = wordData[currentMorphWord].analysis;
             const userAnswers = morphAnswers[currentMorphWord];
-            
-            document.querySelectorAll('#morph-fields .morph-option').forEach(opt => {
-                opt.classList.remove('correct', 'incorrect');
-                
-                const field = opt.getAttribute('data-field');
-                const value = opt.getAttribute('data-value');
-                
-                if (correctAnswers[field] === value) {
-                    opt.classList.add('correct');
-                } else if (userAnswers[field] === value && userAnswers[field] !== correctAnswers[field]) {
-                    opt.classList.add('incorrect');
-                }
-            });
+            const panel = document.getElementById(`panel-${currentMorphWord}`);
+
+            if (panel) {
+                panel.querySelectorAll('.option').forEach(opt => {
+                    opt.classList.remove('option-correct', 'option-incorrect');
+
+                    const field = opt.getAttribute('data-field');
+                    const value = opt.getAttribute('data-value');
+
+                    if (correctAnswers[field] === value) {
+                        opt.classList.add('option-correct');
+                    } else if (userAnswers[field] === value && userAnswers[field] !== correctAnswers[field]) {
+                        opt.classList.add('option-incorrect');
+                    }
+                });
+            }
         }
     }
 
     // ===== ФУНКЦИИ ДЛЯ ВКЛАДКИ "ШАБЛОНЫ" =====
 
     function loadTemplateTab() {
-        const variant = sentenceVariants[currentVariant];
+        const variant = templateVariants[currentTemplateVariant];
         
         // Отображение предложения
         const templateSentenceDiv = document.getElementById('template-sentence');
@@ -607,136 +940,26 @@
         `).join('');
 
         document.getElementById('template-result-message').style.display = 'none';
-        document.getElementById('template-check-btn').disabled = false;
     }
 
     function selectTemplate(templateCode) {
         selectedTemplate = templateCode;
-        
-        document.querySelectorAll('.template-option').forEach(opt => {
-            opt.classList.remove('selected');
-            if (opt.getAttribute('data-template') === templateCode) {
-                opt.classList.add('selected');
-            }
-        });
 
-        document.getElementById('template-result-message').style.display = 'none';
-        document.getElementById('template-check-btn').disabled = false;
+        updateTemplateSelectionStyles();
+        evaluateTemplateProgress();
     }
 
     function selectVerb(word) {
         clickedVerb = word;
-        
-        // Подсветка выбранного глагола
-        document.querySelectorAll('#template-verb-sentence .word').forEach(w => {
-            w.style.backgroundColor = '';
-            w.style.color = '';
-        });
-        
-        const wordEl = document.querySelector(`#template-verb-sentence [data-word="${word}"]`);
-        if (wordEl) {
-            wordEl.style.backgroundColor = '#667eea';
-            wordEl.style.color = 'white';
-        }
+        updateTemplateSelectionStyles();
+        evaluateTemplateProgress();
     }
 
     function selectVerbType(typeCode) {
         selectedVerbType = typeCode;
-        
-        document.querySelectorAll('.verb-type-option').forEach(opt => {
-            opt.classList.remove('selected');
-            if (opt.getAttribute('data-type') === typeCode) {
-                opt.classList.add('selected');
-            }
-        });
 
-        document.getElementById('template-result-message').style.display = 'none';
-        document.getElementById('template-check-btn').disabled = false;
-    }
-
-    function checkTemplate() {
-        const variant = sentenceVariants[currentVariant];
-        const resultMsg = document.getElementById('template-result-message');
-        
-        let errors = [];
-        let totalChecks = 0;
-        let correctChecks = 0;
-
-        // Проверка шаблона
-        if (selectedTemplate) {
-            totalChecks++;
-            const templateOptions = document.querySelectorAll('.template-option');
-            templateOptions.forEach(opt => {
-                opt.classList.remove('correct', 'incorrect');
-                const code = opt.getAttribute('data-template');
-                if (code === variant.template) {
-                    opt.classList.add('correct');
-                    if (code === selectedTemplate) {
-                        correctChecks++;
-                    }
-                } else if (code === selectedTemplate) {
-                    opt.classList.add('incorrect');
-                }
-            });
-            
-            if (selectedTemplate !== variant.template) {
-                errors.push('шаблон');
-            }
-        } else {
-            errors.push('шаблон не выбран');
-        }
-
-        // Проверка глагола
-        if (clickedVerb) {
-            totalChecks++;
-            if (clickedVerb === variant.verb) {
-                correctChecks++;
-            } else {
-                errors.push('неправильный глагол');
-            }
-        } else {
-            errors.push('глагол не выбран');
-        }
-
-        // Проверка типа глагола
-        if (selectedVerbType) {
-            totalChecks++;
-            const verbTypeOptions = document.querySelectorAll('.verb-type-option');
-            verbTypeOptions.forEach(opt => {
-                opt.classList.remove('correct', 'incorrect');
-                const code = opt.getAttribute('data-type');
-                if (code === variant.verbType) {
-                    opt.classList.add('correct');
-                    if (code === selectedVerbType) {
-                        correctChecks++;
-                    }
-                } else if (code === selectedVerbType) {
-                    opt.classList.add('incorrect');
-                }
-            });
-            
-            if (selectedVerbType !== variant.verbType) {
-                errors.push('тип глагола');
-            }
-        } else {
-            errors.push('тип глагола не выбран');
-        }
-
-        // Отображение результата
-        if (errors.length === 0 && correctChecks === totalChecks) {
-            resultMsg.className = 'result-message success';
-            resultMsg.textContent = '🎉 Отлично! Всё правильно!';
-            resultMsg.style.display = 'block';
-            document.getElementById('template-check-btn').disabled = true;
-        } else {
-            resultMsg.className = 'result-message error';
-            if (totalChecks === 0) {
-                resultMsg.textContent = 'Сделайте выбор: укажите шаблон, глагол и его тип';
-            } else {
-                resultMsg.textContent = `Ошибки: ${errors.join(', ')}. Правильных ответов: ${correctChecks} из ${totalChecks}`;
-            }
-            resultMsg.style.display = 'block';
-        }
+        updateTemplateSelectionStyles();
+        evaluateTemplateProgress();
     }
 
     function resetTemplate() {
@@ -753,12 +976,92 @@
         });
 
         document.querySelectorAll('#template-verb-sentence .word').forEach(w => {
+            w.classList.remove('correct', 'incorrect', 'selected');
             w.style.backgroundColor = '';
             w.style.color = '';
         });
 
         document.getElementById('template-result-message').style.display = 'none';
-        document.getElementById('template-check-btn').disabled = false;
+    }
+
+    function updateTemplateSelectionStyles() {
+        const variant = templateVariants[currentTemplateVariant];
+
+        document.querySelectorAll('.template-option').forEach(opt => {
+            opt.classList.remove('selected', 'correct', 'incorrect');
+            const code = opt.getAttribute('data-template');
+            if (code === selectedTemplate) {
+                opt.classList.add('selected');
+                if (code === variant.template) {
+                    opt.classList.add('correct');
+                } else {
+                    opt.classList.add('incorrect');
+                }
+            }
+        });
+
+        document.querySelectorAll('.verb-type-option').forEach(opt => {
+            opt.classList.remove('selected', 'correct', 'incorrect');
+            const code = opt.getAttribute('data-type');
+            if (code === selectedVerbType) {
+                opt.classList.add('selected');
+                if (code === variant.verbType) {
+                    opt.classList.add('correct');
+                } else {
+                    opt.classList.add('incorrect');
+                }
+            }
+        });
+
+        document.querySelectorAll('#template-verb-sentence .word').forEach(w => {
+            w.classList.remove('correct', 'incorrect', 'selected');
+            w.style.backgroundColor = '';
+            w.style.color = '';
+        });
+
+        if (clickedVerb) {
+            const wordEl = document.querySelector(`#template-verb-sentence [data-word="${clickedVerb}"]`);
+            if (wordEl) {
+                wordEl.classList.add('selected');
+                if (clickedVerb === variant.verb) {
+                    wordEl.classList.add('correct');
+                } else {
+                    wordEl.classList.add('incorrect');
+                }
+            }
+        }
+    }
+
+    function evaluateTemplateProgress() {
+        const variant = templateVariants[currentTemplateVariant];
+        const resultMsg = document.getElementById('template-result-message');
+
+        if (!selectedTemplate || !clickedVerb || !selectedVerbType) {
+            resultMsg.style.display = 'none';
+            return;
+        }
+
+        const errors = [];
+
+        if (selectedTemplate !== variant.template) {
+            errors.push('шаблон');
+        }
+        if (clickedVerb !== variant.verb) {
+            errors.push('глагол');
+        }
+        if (selectedVerbType !== variant.verbType) {
+            errors.push('тип глагола');
+        }
+
+        if (errors.length === 0) {
+            resultMsg.className = 'result-message success';
+            resultMsg.textContent = '🎉 Отлично! Всё правильно!';
+            resultMsg.style.display = 'block';
+        } else {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Ошибки: ${errors.join(', ')}.`;
+            resultMsg.style.display = 'block';
+        }
     }
 
     // ===== КОНЕЦ ФУНКЦИЙ ДЛЯ ВКЛАДКИ "ШАБЛОНЫ" =====
@@ -782,6 +1085,10 @@
             document.querySelector('.main-tab[onclick*="morphology"]').classList.add('active');
             document.getElementById('morphology-tab').classList.add('active');
         }
+
+        const gridMode = mode === 'templates' ? 'templates' : 'parts';
+        renderVariantGrid(gridMode);
+        updateVariantInfo(gridMode);
     }
 
     let currentCorrect = 0;
