@@ -1,0 +1,3657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Разбор предложения</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .variant-info {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .layout {
+            display: flex;
+            gap: 20px;
+        }
+
+        .content-area {
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .sidebar-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .variant-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .variant-btn {
+            padding: 12px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .variant-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .variant-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .variant-btn.completed {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            z-index: 1000;
+        }
+
+        .home-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .stats-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .check-mark {
+            font-size: 14px;
+        }
+
+        .sentence-container {
+            background: #f8f9ff;
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 30px 30px 30px;
+            margin-bottom: 30px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sentence {
+            font-size: 24px;
+            line-height: 1.8;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .word {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 0 3px;
+            position: relative;
+        }
+
+        .word:hover {
+            background-color: #e8ecff;
+            transform: translateY(-2px);
+        }
+
+        .word.selected {
+            color: #667eea;
+        }
+
+        .word.correct {
+            background-color: #d1fae5;
+        }
+
+        .word.incorrect {
+            background-color: #fee2e2;
+        }
+
+        .word.not-processed {
+            background-color: #fef3c7;
+        }
+
+        /* Подчёркивания по типам */
+        .word.подлежащее {
+            border-bottom: 3px solid #667eea;
+        }
+
+        .word.сказуемое {
+            border-bottom: 6px double #764ba2;
+        }
+
+        .word.дополнение {
+            border-bottom: 3px dashed #9333ea;
+        }
+
+        .word.определение {
+            text-decoration: underline wavy #f59e0b;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 12px;
+        }
+
+        .word.обстоятельство {
+            position: relative;
+            padding-bottom: 2px;
+        }
+
+        .word.обстоятельство::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-image: repeating-linear-gradient(
+                to right,
+                #10b981 0px,
+                #10b981 8px,
+                transparent 8px,
+                transparent 10px,
+                #10b981 10px,
+                #10b981 12px,
+                transparent 12px,
+                transparent 14px
+            );
+        }
+
+        .word[data-part]::before {
+            content: attr(data-part-abbr);
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #9ca3af;
+            font-weight: normal;
+            white-space: nowrap;
+        }
+
+        .main-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #e5e7eb;
+            padding-bottom: 0;
+        }
+
+        .main-tab {
+            padding: 15px 30px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            border-bottom: none;
+        }
+
+        .main-tab:hover {
+            background: #e5e7eb;
+        }
+
+        .main-tab.active {
+            background: white;
+            color: #667eea;
+            border-color: #e5e7eb;
+            border-bottom: 3px solid white;
+            margin-bottom: -3px;
+        }
+
+        .main-tab-content {
+            display: none;
+        }
+
+        .main-tab-content.active {
+            display: block;
+        }
+
+        .instruction {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #856404;
+        }
+
+        .parts-analysis {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .parts-analysis h3 {
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .parts-group {
+            margin-bottom: 25px;
+        }
+
+        .group-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .group-description {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .part-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+        }
+
+        .part-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(5px);
+        }
+
+        .part-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .part-btn.active .part-name {
+            color: white;
+        }
+
+        .part-btn.active .part-comment {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .part-btn.part-correct {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .part-btn.part-correct .part-name {
+            color: white;
+        }
+
+        .part-btn.part-correct .part-comment {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .part-btn.part-incorrect {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .part-btn.part-incorrect .part-name {
+            color: white;
+        }
+
+        .part-btn.part-incorrect .part-comment {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .part-name {
+            display: block;
+            font-weight: 600;
+            font-size: 15px;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .part-comment {
+            display: block;
+            font-size: 12px;
+            color: #6b7280;
+            user-select: none;
+        }
+
+        .check-button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .check-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .check-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .result-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        .result-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        .tabs-container {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: #e5e7eb;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .analysis-container {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .analysis-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .word-type-selector {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .word-type-selector h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .type-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .type-btn {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .type-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .type-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .type-btn.type-btn-correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .type-btn.type-btn-incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+
+        .section-error {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .section-correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .option {
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .option.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option.option-correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .option.option-incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 12px;
+        }
+
+        .legend h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 8px 15px 8px 0;
+            font-size: 14px;
+        }
+
+        .legend-sample {
+            display: inline-block;
+            padding: 4px 12px;
+            margin-right: 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .legend-wavy {
+            text-decoration: underline wavy #f59e0b;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 5px;
+            padding-bottom: 2px;
+        }
+
+        .legend-dash-dot {
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .legend-dash-dot::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-image: repeating-linear-gradient(
+                to right,
+                #10b981 0px,
+                #10b981 8px,
+                transparent 8px,
+                transparent 10px,
+                #10b981 10px,
+                #10b981 12px,
+                transparent 12px,
+                transparent 14px
+            );
+        }
+
+        @media (max-width: 968px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .variant-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .type-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Модальное окно для ввода имени -->
+<div id="name-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 20px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <h2 style="color: #667eea; margin-bottom: 20px; text-align: center;">🎉 Поздравляем!</h2>
+        <p style="text-align: center; color: #6b7280; margin-bottom: 30px; font-size: 16px;" id="modal-message">
+            Вы правильно разобрали предложение!
+        </p>
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 10px; color: #2c3e50; font-weight: 600;">Введите ваше имя:</label>
+            <input type="text" id="user-name-input" placeholder="Ваше имя" 
+                   style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="saveToLeaderboard()" 
+                    style="flex: 1; padding: 15px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                Сохранить результат
+            </button>
+            <button onclick="closeNameModal()" 
+                    style="flex: 1; padding: 15px; background: #e5e7eb; color: #6b7280; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                Пропустить
+            </button>
+        </div>
+    </div>
+</div>
+
+<a href="/index.html" class="home-btn">← Главная</a>
+
+<div class="main-container">
+    <h1>Разбор предложения</h1>
+    <div class="variant-info">Вариант <span id="variant-number">1</span> из 25</div>
+
+    <!-- Статистика -->
+    <div class="stats-section" id="stats-section" style="display: none;">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-completed">0</div>
+                <div class="stat-label">Пройдено</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-total">12</div>
+                <div class="stat-label">Всего</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-accuracy">0%</div>
+                <div class="stat-label">Точность</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <div class="content-area">
+            <div class="sentence-container">
+                <div class="sentence" id="sentence"></div>
+            </div>
+
+            <div class="main-tabs">
+                <button class="main-tab active" onclick="switchMainTab('parts')">По частям речи</button>
+                <button class="main-tab" onclick="switchMainTab('morphology')">Морфологический</button>
+            </div>
+
+            <!-- Вкладка "По частям речи" -->
+            <div id="parts-tab" class="main-tab-content active">
+                <div class="instruction">
+                    <strong>Инструкция:</strong> Кликните на слово в предложении и выберите его часть речи из списка ниже.
+                </div>
+                
+                <div class="parts-analysis">
+                    <h3>Выберите часть речи:</h3>
+                    
+                    <div class="parts-group">
+                        <div class="group-title">1. Самостоятельные (знаменательные)</div>
+                        <div class="group-description">Они называют предметы, действия или признаки и являются членами предложения</div>
+                        
+                        <button class="part-btn" data-part="существительное">
+                            <span class="part-name">Имя существительное</span>
+                            <span class="part-comment">кто? что? — дом, радость</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="прилагательное">
+                            <span class="part-name">Имя прилагательное</span>
+                            <span class="part-comment">какой? чей? — синий, мамин</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="числительное">
+                            <span class="part-name">Имя числительное</span>
+                            <span class="part-comment">сколько? который? — пять, второй</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="местоимение">
+                            <span class="part-name">Местоимение</span>
+                            <span class="part-comment">указывает, но не называет — я, этот, каждый</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="глагол">
+                            <span class="part-name">Глагол</span>
+                            <span class="part-comment">что делать? — бежать, учиться</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="причастие">
+                            <span class="part-name">Причастие</span>
+                            <span class="part-comment">особая форма глагола — бегущий</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="деепричастие">
+                            <span class="part-name">Деепричастие</span>
+                            <span class="part-comment">особая форма глагола — пробежав</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="наречие">
+                            <span class="part-name">Наречие</span>
+                            <span class="part-comment">как? где? когда? — быстро, вчера</span>
+                        </button>
+                    </div>
+                    
+                    <div class="parts-group">
+                        <div class="group-title">2. Служебные</div>
+                        <div class="group-description">Не отвечают на вопросы и нужны для связи слов или передачи оттенков значения</div>
+                        
+                        <button class="part-btn" data-part="предлог">
+                            <span class="part-name">Предлог</span>
+                            <span class="part-comment">в, на, под</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="союз">
+                            <span class="part-name">Союз</span>
+                            <span class="part-comment">и, но, потому что</span>
+                        </button>
+                        
+                        <button class="part-btn" data-part="частица">
+                            <span class="part-name">Частица</span>
+                            <span class="part-comment">не, бы, неужели</span>
+                        </button>
+                    </div>
+                    
+                    <div class="parts-group">
+                        <div class="group-title">3. Особая группа</div>
+                        <div class="group-description">Выражает чувства, но не называет их</div>
+                        
+                        <button class="part-btn" data-part="междометие">
+                            <span class="part-name">Междометие</span>
+                            <span class="part-comment">ах!, ой!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="check-button" id="check-btn" onclick="checkVariant()">Проверить</button>
+                <div class="result-message" id="result-message"></div>
+            </div>
+
+            <!-- Вкладка "Морфологический" -->
+            <div id="morphology-tab" class="main-tab-content">
+                <div class="instruction">
+                    <strong>Инструкция:</strong> Кликните на слово в предложении, чтобы определить его часть речи и выполнить морфологический разбор.
+                </div>
+                
+                <div class="tabs-container" id="tabs-container">
+                    <!-- Вкладки слов будут добавлены динамически -->
+                </div>
+
+                <div id="analysis-panels">
+                    <!-- Панели анализа будут добавлены динамически -->
+                </div>
+
+                <button class="check-button" id="morph-check-btn" onclick="checkMorphology()" style="display: none;">Проверить морфологический разбор</button>
+                <div class="result-message" id="morph-result-message"></div>
+            </div>
+        </div>
+
+        <!-- Боковая панель с вариантами -->
+        <div class="sidebar">
+            <div class="sidebar-title">Варианты</div>
+            <div class="variant-grid" id="variant-grid"></div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <h3>Обозначения подчёркиваний:</h3>
+        <div class="legend-item">
+            <span class="legend-sample" style="border-bottom: 3px solid #667eea; padding-bottom: 2px;">Подлежащее</span> — одна черта
+        </div>
+        <div class="legend-item">
+            <span class="legend-sample" style="border-bottom: 6px double #764ba2; padding-bottom: 2px;">Сказуемое</span> — две черты
+        </div>
+        <div class="legend-item">
+            <span class="legend-sample" style="border-bottom: 3px dashed #9333ea; padding-bottom: 2px;">Дополнение</span> — пунктирная линия
+        </div>
+        <div class="legend-item">
+            <span class="legend-sample legend-wavy">Определение</span> — волнистая линия
+        </div>
+        <div class="legend-item">
+            <span class="legend-sample legend-dash-dot">Обстоятельство</span> — тире-точка
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = 'http://localhost:3000/api';
+    const TEST_TYPE = 'sentence_analysis';
+
+    let variantIdByNumber = null;
+    let variantMapPromise = null;
+    let variantStartAt = null;
+
+    async function ensureVariantIdMap() {
+        if (variantIdByNumber) {
+            return variantIdByNumber;
+        }
+
+        if (!variantMapPromise) {
+            variantMapPromise = fetch(`${API_BASE_URL}/tests/variants/${TEST_TYPE}`)
+                .then(async (response) => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const map = {};
+                    (data.variants || []).forEach((variant) => {
+                        if (variant.variant_number != null && variant.variant_id != null) {
+                            map[variant.variant_number] = variant.variant_id;
+                        }
+                    });
+
+                    return map;
+                });
+        }
+
+        variantIdByNumber = await variantMapPromise;
+        return variantIdByNumber;
+    }
+
+    async function getCurrentVariantId() {
+        const map = await ensureVariantIdMap();
+        return map[currentVariant + 1] || null;
+    }
+
+    function getTimeSpentSeconds() {
+        if (!variantStartAt) {
+            return 0;
+        }
+
+        return Math.max(0, Math.round((Date.now() - variantStartAt) / 1000));
+    }
+
+    // Данные для вариантов с проверкой
+    const sentenceVariants = [
+        { 
+            sentence: "Веселые котята играют с пушистым клубочком.",
+            correct: {
+                'веселые': 'прилагательное',
+                'котята': 'существительное',
+                'играют': 'глагол',
+                'с': 'предлог',
+                'пушистым': 'прилагательное',
+                'клубочком': 'существительное'
+            }
+        },
+        { 
+            sentence: "Маленькая девочка нарисовала красивую бабочку.",
+            correct: {
+                'маленькая': 'прилагательное',
+                'девочка': 'существительное',
+                'нарисовала': 'глагол',
+                'красивую': 'прилагательное',
+                'бабочку': 'существительное'
+            }
+        },
+        { 
+            sentence: "Добрый щенок весело бегает по зеленой траве.",
+            correct: {
+                'добрый': 'прилагательное',
+                'щенок': 'существительное',
+                'весело': 'наречие',
+                'бегает': 'глагол',
+                'по': 'предлог',
+                'зеленой': 'прилагательное',
+                'траве': 'существительное'
+            }
+        },
+        { 
+            sentence: "Белочка быстро прыгает и собирает орешки.",
+            correct: {
+                'белочка': 'существительное',
+                'быстро': 'наречие',
+                'прыгает': 'глагол',
+                'и': 'союз',
+                'собирает': 'глагол',
+                'орешки': 'существительное'
+            }
+        },
+        { 
+            sentence: "Разноцветные шарики летят высоко в небо.",
+            correct: {
+                'разноцветные': 'прилагательное',
+                'шарики': 'существительное',
+                'летят': 'глагол',
+                'высоко': 'наречие',
+                'в': 'предлог',
+                'небо': 'существительное'
+            }
+        },
+        { 
+            sentence: "Мама испекла вкусный пирог с яблоками.",
+            correct: {
+                'мама': 'существительное',
+                'испекла': 'глагол',
+                'вкусный': 'прилагательное',
+                'пирог': 'существительное',
+                'с': 'предлог',
+                'яблоками': 'существительное'
+            }
+        },
+        { 
+            sentence: "Озорные воробьи громко чирикают на ветке.",
+            correct: {
+                'озорные': 'прилагательное',
+                'воробьи': 'существительное',
+                'громко': 'наречие',
+                'чирикают': 'глагол',
+                'на': 'предлог',
+                'ветке': 'существительное'
+            }
+        },
+        { 
+            sentence: "Дедушка читает интересную сказку про волшебника.",
+            correct: {
+                'дедушка': 'существительное',
+                'читает': 'глагол',
+                'интересную': 'прилагательное',
+                'сказку': 'существительное',
+                'про': 'предлог',
+                'волшебника': 'существительное'
+            }
+        },
+        { 
+            sentence: "Синяя бабочка тихо села на душистый цветок.",
+            correct: {
+                'синяя': 'прилагательное',
+                'бабочка': 'существительное',
+                'тихо': 'наречие',
+                'села': 'глагол',
+                'на': 'предлог',
+                'душистый': 'прилагательное',
+                'цветок': 'существительное'
+            }
+        },
+        { 
+            sentence: "Радостные дети строят большой замок из песка.",
+            correct: {
+                'радостные': 'прилагательное',
+                'дети': 'существительное',
+                'строят': 'глагол',
+                'большой': 'прилагательное',
+                'замок': 'существительное',
+                'из': 'предлог',
+                'песка': 'существительное'
+            }
+        },
+        { 
+            sentence: "Пушистая кошка спит на мягком диване.",
+            correct: {
+                'пушистая': 'прилагательное',
+                'кошка': 'существительное',
+                'спит': 'глагол',
+                'на': 'предлог',
+                'мягком': 'прилагательное',
+                'диване': 'существительное'
+            }
+        },
+        { 
+            sentence: "Младший брат смотрит интересный мультфильм по телевизору.",
+            correct: {
+                'младший': 'прилагательное',
+                'брат': 'существительное',
+                'смотрит': 'глагол',
+                'интересный': 'прилагательное',
+                'мультфильм': 'существительное',
+                'по': 'предлог',
+                'телевизору': 'существительное'
+            }
+        },
+        { 
+            sentence: "Холодный дождь стучит по крыше нашего дома.",
+            correct: {
+                'холодный': 'прилагательное',
+                'дождь': 'существительное',
+                'стучит': 'глагол',
+                'по': 'предлог',
+                'крыше': 'существительное',
+                'нашего': 'местоимение',
+                'дома': 'существительное'
+            }
+        },
+        { 
+            sentence: "Умный щенок быстро выучил новую команду хозяина.",
+            correct: {
+                'умный': 'прилагательное',
+                'щенок': 'существительное',
+                'быстро': 'наречие',
+                'выучил': 'глагол',
+                'новую': 'прилагательное',
+                'команду': 'существительное',
+                'хозяина': 'существительное'
+            }
+        },
+        { 
+            sentence: "Разноцветные шарики летят высоко в небо к облакам.",
+            correct: {
+                'разноцветные': 'прилагательное',
+                'шарики': 'существительное',
+                'летят': 'глагол',
+                'высоко': 'наречие',
+                'в': 'предлог',
+                'небо': 'существительное',
+                'к': 'предлог',
+                'облакам': 'существительное'
+            }
+        },
+        { 
+            sentence: "Добрая бабушка испекла вкусный пирог с яблоками.",
+            correct: {
+                'добрая': 'прилагательное',
+                'бабушка': 'существительное',
+                'испекла': 'глагол',
+                'вкусный': 'прилагательное',
+                'пирог': 'существительное',
+                'с': 'предлог',
+                'яблоками': 'существительное'
+            }
+        },
+        { 
+            sentence: "Маленький котёнок весело играет с клубком пушистой шерсти.",
+            correct: {
+                'маленький': 'прилагательное',
+                'котёнок': 'существительное',
+                'весело': 'наречие',
+                'играет': 'глагол',
+                'с': 'предлог',
+                'клубком': 'существительное',
+                'пушистой': 'прилагательное',
+                'шерсти': 'существительное'
+            }
+        },
+        { 
+            sentence: "Яркое солнце светит сквозь зелёные листья деревьев.",
+            correct: {
+                'яркое': 'прилагательное',
+                'солнце': 'существительное',
+                'светит': 'глагол',
+                'сквозь': 'предлог',
+                'зелёные': 'прилагательное',
+                'листья': 'существительное',
+                'деревьев': 'существительное'
+            }
+        },
+        { 
+            sentence: "Дети радостно бегут к высокой горке в парке.",
+            correct: {
+                'дети': 'существительное',
+                'радостно': 'наречие',
+                'бегут': 'глагол',
+                'к': 'предлог',
+                'высокой': 'прилагательное',
+                'горке': 'существительное',
+                'в': 'предлог',
+                'парке': 'существительное'
+            }
+        },
+        { 
+            sentence: "Весёлая белочка грызёт вкусный орех на ветке дуба.",
+            correct: {
+                'весёлая': 'прилагательное',
+                'белочка': 'существительное',
+                'грызёт': 'глагол',
+                'вкусный': 'прилагательное',
+                'орех': 'существительное',
+                'на': 'предлог',
+                'ветке': 'существительное',
+                'дуба': 'существительное'
+            }
+        },
+        { 
+            sentence: "Мой друг нарисовал красивую картину цветными карандашами.",
+            correct: {
+                'мой': 'местоимение',
+                'друг': 'существительное',
+                'нарисовал': 'глагол',
+                'красивую': 'прилагательное',
+                'картину': 'существительное',
+                'цветными': 'прилагательное',
+                'карандашами': 'существительное'
+            }
+        },
+        { 
+            sentence: "Синие бабочки порхают над душистыми цветами в саду.",
+            correct: {
+                'синие': 'прилагательное',
+                'бабочки': 'существительное',
+                'порхают': 'глагол',
+                'над': 'предлог',
+                'душистыми': 'прилагательное',
+                'цветами': 'существительное',
+                'в': 'предлог',
+                'саду': 'существительное'
+            }
+        },
+        { 
+            sentence: "Большая собака громко лает у соседского забора.",
+            correct: {
+                'большая': 'прилагательное',
+                'собака': 'существительное',
+                'громко': 'наречие',
+                'лает': 'глагол',
+                'у': 'предлог',
+                'соседского': 'прилагательное',
+                'забора': 'существительное'
+            }
+        },
+        { 
+            sentence: "Старшая сестра читает маленькому брату сказку перед сном.",
+            correct: {
+                'старшая': 'прилагательное',
+                'сестра': 'существительное',
+                'читает': 'глагол',
+                'маленькому': 'прилагательное',
+                'брату': 'существительное',
+                'сказку': 'существительное',
+                'перед': 'предлог',
+                'сном': 'существительное'
+            }
+        },
+        { 
+            sentence: "Тёплый ветер приносит свежий запах цветущей сирени.",
+            correct: {
+                'тёплый': 'прилагательное',
+                'ветер': 'существительное',
+                'приносит': 'глагол',
+                'свежий': 'прилагательное',
+                'запах': 'существительное',
+                'цветущей': 'прилагательное',
+                'сирени': 'существительное'
+            }
+        }
+    ];
+
+    let currentVariant = 0;
+    let userChoices = {};
+    let completedVariants = new Set();
+    let selectedWord = null;
+    let currentMode = 'parts';
+    let activeTab = null;
+    let morphAnswers = {}; // Ответы морфологического разбора для каждого слова
+
+    // Данные для морфологического разбора
+    const wordData = {
+        // Предложение 1: Яркое солнце осветило лесную поляну ранним утром.
+        'яркое': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ср.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'солнце': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'осветило': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'совершенный',
+                'transitivity': 'переходный',
+                'tense': 'прошедшее',
+                'gender': 'ср.р.',
+                'number': 'ед.ч.'
+            }
+        },
+        'лесную': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'относительное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'поляну': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'ранним': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ср.р.',
+                'number': 'ед.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        'утром': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        
+        // Предложение 2: Веселые котята играют с пушистым клубочком.
+        'веселые': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'котята': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'играют': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'мн.ч.'
+            }
+        },
+        'пушистым': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        'клубочком': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        
+        // Предложение 3: Маленькая девочка нарисовала красивую бабочку.
+        'маленькая': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'девочка': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'нарисовала': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'совершенный',
+                'transitivity': 'переходный',
+                'tense': 'прошедшее',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.'
+            }
+        },
+        'красивую': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'бабочку': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        
+        // Предложение 4: Добрый щенок весело бегает по зеленой траве.
+        'добрый': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'щенок': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'бегает': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'зеленой': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        'траве': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        
+        // Предложение 5: Белочка быстро прыгает и собирает орешки.
+        'белочка': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'прыгает': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'собирает': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'переходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'орешки': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'В.п.'
+            }
+        },
+        
+        // Предложение 6: Разноцветные шарики летят высоко в небо.
+        'разноцветные': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'шарики': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'летят': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'мн.ч.'
+            }
+        },
+        'небо': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        
+        // Предложение 7: Мама испекла вкусный пирог с яблоками.
+        'мама': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'испекла': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'совершенный',
+                'transitivity': 'переходный',
+                'tense': 'прошедшее',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.'
+            }
+        },
+        'вкусный': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'пирог': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'яблоками': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        
+        // Предложение 8: Озорные воробьи громко чирикают на ветке.
+        'озорные': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'воробьи': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'чирикают': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'мн.ч.'
+            }
+        },
+        'ветке': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'П.п.'
+            }
+        },
+        
+        // Предложение 9: Дедушка читает интересную сказку про волшебника.
+        'дедушка': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'читает': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'переходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'интересную': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'сказку': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'волшебника': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        
+        // Предложение 10: Синяя бабочка тихо села на душистый цветок.
+        'синяя': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'бабочка': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'села': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'совершенный',
+                'transitivity': 'непереходный',
+                'tense': 'прошедшее',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.'
+            }
+        },
+        'душистый': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'цветок': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        
+        // Предложение 11: Радостные дети строят большой замок из песка.
+        'радостные': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'дети': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'строят': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'переходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'мн.ч.'
+            }
+        },
+        'большой': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'замок': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'песка': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        
+        // Предложение 12: Пушистая кошка спит на мягком диване.
+        'пушистая': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'кошка': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'спит': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'мягком': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'П.п.'
+            }
+        },
+        'диване': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'П.п.'
+            }
+        },
+        
+        // Предложение 13: Младший брат смотрит интересный мультфильм по телевизору.
+        'младший': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'относительное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'брат': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'смотрит': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'переходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'интересный': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'мультфильм': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'телевизору': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        
+        // Предложение 14: Холодный дождь стучит по крыше нашего дома.
+        'холодный': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'дождь': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'стучит': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'крыше': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        'нашего': {
+            type: 'определение',
+            part: 'местоимение',
+            analysis: {
+                'type': 'притяжательное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        'дома': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        
+        // Предложение 15: Умный щенок быстро выучил новую команду хозяина.
+        'умный': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'щенок': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'быстро': {
+            type: 'обстоятельство',
+            part: 'наречие',
+            analysis: {
+                'type': 'образа действия',
+                'degree': 'положительная'
+            }
+        },
+        'выучил': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'совершенный',
+                'transitivity': 'переходный',
+                'tense': 'прошедшее',
+                'gender': 'м.р.',
+                'number': 'ед.ч.'
+            }
+        },
+        'новую': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'относительное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'команду': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'хозяина': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        
+        // Предложение 16: Разноцветные шарики летят высоко в небо к облакам.
+        'разноцветные': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': '-',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'шарики': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'летят': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'мн.ч.'
+            }
+        },
+        'высоко': {
+            type: 'обстоятельство',
+            part: 'наречие',
+            analysis: {
+                'type': 'места',
+                'degree': 'положительная'
+            }
+        },
+        'небо': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'облакам': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        
+        // Предложение 17: Добрая бабушка испекла вкусный пирог с яблоками.
+        'добрая': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'бабушка': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'испекла': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'совершенный',
+                'transitivity': 'переходный',
+                'tense': 'прошедшее',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.'
+            }
+        },
+        'вкусный': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'пирог': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'яблоками': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        
+        // Предложение 18: Маленький котёнок весело играет с клубком пушистой шерсти.
+        'маленький': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'котёнок': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'весело': {
+            type: 'обстоятельство',
+            part: 'наречие',
+            analysis: {
+                'type': 'образа действия',
+                'degree': 'положительная'
+            }
+        },
+        'играет': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'клубком': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        'пушистой': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        'шерсти': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '3-е',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        
+        // Предложение 19: Яркое солнце светит сквозь зелёные листья деревьев.
+        'яркое': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ср.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'солнце': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'светит': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'зелёные': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': '-',
+                'number': 'мн.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'листья': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'деревьев': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ср.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        
+        // Предложение 20: Дети радостно бегут к высокой горке в парке.
+        'дети': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': '-',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'радостно': {
+            type: 'обстоятельство',
+            part: 'наречие',
+            analysis: {
+                'type': 'образа действия',
+                'degree': 'положительная'
+            }
+        },
+        'бегут': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'мн.ч.'
+            }
+        },
+        'высокой': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        'горке': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        'парке': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'П.п.'
+            }
+        },
+        
+        // Предложение 21: Весёлая белочка грызёт вкусный орех на ветке дуба.
+        'весёлая': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'белочка': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'грызёт': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'переходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'вкусный': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'орех': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'ветке': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'П.п.'
+            }
+        },
+        'дуба': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        
+        // Предложение 22: Мой друг нарисовал красивую картину цветными карандашами.
+        'мой': {
+            type: 'определение',
+            part: 'местоимение',
+            analysis: {
+                'type': 'притяжательное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'друг': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'нарисовал': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'совершенный',
+                'transitivity': 'переходный',
+                'tense': 'прошедшее',
+                'gender': 'м.р.',
+                'number': 'ед.ч.'
+            }
+        },
+        'красивую': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'картину': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'цветными': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'относительное',
+                'form': 'полное',
+                'gender': '-',
+                'number': 'мн.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        'карандашами': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        
+        // Предложение 23: Синие бабочки порхают над душистыми цветами в саду.
+        'синие': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': '-',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'бабочки': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'мн.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'порхают': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'мн.ч.'
+            }
+        },
+        'душистыми': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': '-',
+                'number': 'мн.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        'цветами': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'мн.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        'саду': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'П.п.'
+            }
+        },
+        
+        // Предложение 24: Большая собака громко лает у соседского забора.
+        'большая': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'собака': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'громко': {
+            type: 'обстоятельство',
+            part: 'наречие',
+            analysis: {
+                'type': 'образа действия',
+                'degree': 'положительная'
+            }
+        },
+        'лает': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'непереходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'соседского': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'относительное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        'забора': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        
+        // Предложение 25: Старшая сестра читает маленькому брату сказку перед сном.
+        'старшая': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'относительное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'сестра': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'читает': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'переходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'маленькому': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        'брату': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'одушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Д.п.'
+            }
+        },
+        'сказку': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '1-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'перед': {
+            type: 'предлог',
+            part: 'предлог',
+            analysis: {}
+        },
+        'сном': {
+            type: 'обстоятельство',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'Т.п.'
+            }
+        },
+        
+        // Предложение 26: Тёплый ветер приносит свежий запах цветущей сирени.
+        'тёплый': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'ветер': {
+            type: 'подлежащее',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'И.п.'
+            }
+        },
+        'приносит': {
+            type: 'сказуемое',
+            part: 'глагол',
+            analysis: {
+                'aspect': 'несовершенный',
+                'transitivity': 'переходный',
+                'tense': 'настоящее',
+                'gender': '-',
+                'number': 'ед.ч.'
+            }
+        },
+        'свежий': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'м.р.',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'запах': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'м.р.',
+                'declension': '2-е',
+                'number': 'ед.ч.',
+                'case': 'В.п.'
+            }
+        },
+        'цветущей': {
+            type: 'определение',
+            part: 'прилагательное',
+            analysis: {
+                'quality': 'качественное',
+                'form': 'полное',
+                'gender': 'ж.р.',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        },
+        'сирени': {
+            type: 'дополнение',
+            part: 'существительное',
+            analysis: {
+                'animacy': 'неодушевлённое',
+                'proper': 'нарицательное',
+                'gender': 'ж.р.',
+                'declension': '3-е',
+                'number': 'ед.ч.',
+                'case': 'Р.п.'
+            }
+        }
+    };
+
+    // Шаблоны форм для разных частей речи
+    const analysisTemplates = {
+        'существительное': [
+            { prop: 'animacy', title: 'Одушевлённость', options: ['одушевлённое', 'неодушевлённое'] },
+            { prop: 'proper', title: 'Собственное / нарицательное', options: ['собственное', 'нарицательное'] },
+            { prop: 'gender', title: 'Род', options: ['м.р.', 'ж.р.', 'ср.р.', '-'] },
+            { prop: 'declension', title: 'Склонение', options: ['1-е', '2-е', '3-е'] },
+            { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] },
+            { prop: 'case', title: 'Падеж', options: ['И.п.', 'Р.п.', 'Д.п.', 'В.п.', 'Т.п.', 'П.п.'] }
+        ],
+        'прилагательное': [
+            { prop: 'quality', title: 'Качественное / относительное', options: ['качественное', 'относительное', 'притяжательное'] },
+            { prop: 'form', title: 'Форма', options: ['полное', 'краткое'] },
+            { prop: 'gender', title: 'Род', options: ['м.р.', 'ж.р.', 'ср.р.', '-'] },
+            { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] },
+            { prop: 'case', title: 'Падеж', options: ['И.п.', 'Р.п.', 'Д.п.', 'В.п.', 'Т.п.', 'П.п.'] }
+        ],
+        'глагол': [
+            { prop: 'aspect', title: 'Вид', options: ['совершенный', 'несовершенный'] },
+            { prop: 'transitivity', title: 'Переходность', options: ['переходный', 'непереходный'] },
+            { prop: 'tense', title: 'Время', options: ['настоящее', 'прошедшее', 'будущее'] },
+            { prop: 'gender', title: 'Род (для прош. вр.)', options: ['м.р.', 'ж.р.', 'ср.р.', '-'] },
+            { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] }
+        ],
+        'местоимение': [
+            { prop: 'type', title: 'Разряд', options: ['личное', 'притяжательное', 'указательное', 'определительное', 'вопросительное', 'относительное', 'отрицательное', 'неопределённое'] },
+            { prop: 'gender', title: 'Род', options: ['м.р.', 'ж.р.', 'ср.р.', '-'] },
+            { prop: 'number', title: 'Число', options: ['ед.ч.', 'мн.ч.'] },
+            { prop: 'case', title: 'Падеж', options: ['И.п.', 'Р.п.', 'Д.п.', 'В.п.', 'Т.п.', 'П.п.'] }
+        ],
+        'наречие': [
+            { prop: 'type', title: 'Разряд', options: ['образа действия', 'меры и степени', 'места', 'времени', 'причины', 'цели'] },
+            { prop: 'degree', title: 'Степень сравнения', options: ['положительная', 'сравнительная', 'превосходная'] }
+        ],
+        'предлог': []
+    };
+
+    const abbreviations = {
+        'существительное': 'Сущ.',
+        'прилагательное': 'Прил.',
+        'числительное': 'Числ.',
+        'местоимение': 'Мест.',
+        'глагол': 'Гл.',
+        'причастие': 'Прич.',
+        'деепричастие': 'Деепр.',
+        'наречие': 'Нар.',
+        'предлог': 'Предл.',
+        'союз': 'Союз',
+        'частица': 'Част.',
+        'междометие': 'Межд.'
+    };
+
+    function init() {
+        initVariantButtons();
+        loadVariant(0);
+        void ensureVariantIdMap();
+        
+        document.querySelectorAll('.part-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (selectedWord) {
+                    const part = btn.getAttribute('data-part');
+                    applyPartOfSpeech(selectedWord, part);
+                    
+                    document.querySelectorAll('.part-btn').forEach(b => {
+                        b.classList.remove('active', 'part-correct', 'part-incorrect');
+                    });
+                    btn.classList.add('active');
+                    
+                    // Мгновенная проверка части речи
+                    const variant = sentenceVariants[currentVariant];
+                    
+                    if (variant.correct[selectedWord]) {
+                        if (part === variant.correct[selectedWord]) {
+                            btn.classList.add('part-correct');
+                        } else {
+                            btn.classList.add('part-incorrect');
+                        }
+                    }
+                    
+                    // Проверяем все ли слова обработаны
+                    checkIfAllWordsProcessed();
+                }
+            });
+        });
+    }
+
+    function checkIfAllWordsProcessed() {
+        const variant = sentenceVariants[currentVariant];
+        const total = Object.keys(variant.correct).length;
+        const processed = Object.keys(userChoices).length;
+        let errors = 0;
+        
+        // Подсчитываем ошибки
+        for (let word in userChoices) {
+            if (variant.correct[word] && userChoices[word] !== variant.correct[word]) {
+                errors++;
+            }
+        }
+        
+        const resultMsg = document.getElementById('result-message');
+        
+        if (processed === total) {
+            // Все слова обработаны
+            if (errors === 0) {
+                resultMsg.className = 'result-message success';
+                resultMsg.textContent = '🎉 Отлично! Все правильно!';
+                resultMsg.style.display = 'block';
+                completedVariants.add(currentVariant);
+                updateVariantButtons();
+                document.getElementById('check-btn').disabled = true;
+            } else {
+                resultMsg.className = 'result-message error';
+                resultMsg.textContent = `Есть ошибки. Правильных ответов: ${total - errors} из ${total}. Неправильные ответы отмечены красным.`;
+                resultMsg.style.display = 'block';
+            }
+        } else {
+            resultMsg.style.display = 'none';
+            document.getElementById('check-btn').disabled = false;
+        }
+    }
+
+    function initVariantButtons() {
+        const grid = document.getElementById('variant-grid');
+        sentenceVariants.forEach((_, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'variant-btn';
+            btn.id = `variant-${index}`;
+            btn.innerHTML = `<span>${index + 1}</span><span class="check-mark" id="check-${index}"></span>`;
+            btn.onclick = () => loadVariant(index);
+            grid.appendChild(btn);
+        });
+    }
+
+    function loadVariant(index) {
+        currentVariant = index;
+        userChoices = {};
+        selectedWord = null;
+        morphAnswers = {};
+        variantStartAt = Date.now();
+        
+        const variant = sentenceVariants[index];
+        const sentenceEl = document.getElementById('sentence');
+        const words = variant.sentence.split(/\s+/);
+        
+        sentenceEl.innerHTML = words.map(word => {
+            const cleanWord = word.replace(/[.,!?;:]/, '').toLowerCase();
+            return `<span class="word" data-word="${cleanWord}">${word}</span>`;
+        }).join(' ');
+
+        document.querySelectorAll('.word').forEach(wordEl => {
+            wordEl.addEventListener('click', () => selectWord(wordEl));
+        });
+
+        document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('result-message').style.display = 'none';
+        document.getElementById('check-btn').disabled = false;
+        
+        // Очистка морфологического разбора
+        document.getElementById('tabs-container').innerHTML = '';
+        document.getElementById('analysis-panels').innerHTML = '';
+        document.getElementById('morph-check-btn').style.display = 'none';
+        document.getElementById('morph-check-btn').disabled = false;
+        document.getElementById('morph-result-message').style.display = 'none';
+        
+        document.getElementById('variant-number').textContent = index + 1;
+        updateVariantButtons();
+    }
+
+    function selectWord(wordEl) {
+        const word = wordEl.getAttribute('data-word');
+        
+        document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+        wordEl.classList.add('selected');
+        selectedWord = word;
+        
+        if (currentMode === 'morphology') {
+            // Создаём или активируем вкладку для морфологического разбора
+            createOrActivateTab(word);
+        } else {
+            document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
+        }
+    }
+
+    function createOrActivateTab(word) {
+        const tabsContainer = document.getElementById('tabs-container');
+        const existingTab = document.getElementById(`tab-${word}`);
+
+        if (existingTab) {
+            activateWordTab(word);
+        } else {
+            const tab = document.createElement('button');
+            tab.className = 'tab';
+            tab.id = `tab-${word}`;
+            tab.textContent = word.charAt(0).toUpperCase() + word.slice(1);
+            tab.addEventListener('click', () => activateWordTab(word));
+            tabsContainer.appendChild(tab);
+
+            createAnalysisPanel(word);
+            activateWordTab(word);
+        }
+    }
+
+    function activateWordTab(word) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.analysis-container').forEach(p => p.classList.remove('active'));
+
+        const tab = document.getElementById(`tab-${word}`);
+        const panel = document.getElementById(`panel-${word}`);
+        
+        if (tab) tab.classList.add('active');
+        if (panel) panel.classList.add('active');
+        
+        activeTab = word;
+    }
+
+    function createAnalysisPanel(word) {
+        const panelsContainer = document.getElementById('analysis-panels');
+        const panel = document.createElement('div');
+        panel.className = 'analysis-container';
+        panel.id = `panel-${word}`;
+
+        const typeSelector = document.createElement('div');
+        typeSelector.className = 'word-type-selector';
+        typeSelector.innerHTML = `
+            <h3>Определите роль слова "${word}" в предложении:</h3>
+            <div class="type-buttons">
+                <button class="type-btn" data-type="подлежащее">Подлежащее</button>
+                <button class="type-btn" data-type="сказуемое">Сказуемое</button>
+                <button class="type-btn" data-type="дополнение">Дополнение</button>
+                <button class="type-btn" data-type="определение">Определение</button>
+                <button class="type-btn" data-type="обстоятельство">Обстоятельство</button>
+            </div>
+        `;
+
+        panel.appendChild(typeSelector);
+
+        const formContainer = document.createElement('div');
+        formContainer.id = `form-${word}`;
+        formContainer.style.display = 'none';
+        panel.appendChild(formContainer);
+
+        panelsContainer.appendChild(panel);
+
+        typeSelector.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', () => selectWordType(word, btn.getAttribute('data-type'), btn));
+        });
+    }
+
+    function selectWordType(word, type, btn) {
+        const btnGroup = btn.parentElement;
+        btnGroup.querySelectorAll('.type-btn').forEach(b => {
+            b.classList.remove('active', 'type-btn-correct', 'type-btn-incorrect');
+        });
+        btn.classList.add('active');
+
+        // Мгновенная проверка роли
+        if (wordData[word] && wordData[word].type) {
+            if (type === wordData[word].type) {
+                btn.classList.add('type-btn-correct');
+            } else {
+                btn.classList.add('type-btn-incorrect');
+            }
+        }
+
+        const wordEl = document.querySelector(`[data-word="${word}"]`);
+        wordEl.className = 'word selected ' + type;
+
+        let partOfSpeech = wordData[word]?.part || 'существительное';
+        showAnalysisForm(word, partOfSpeech);
+    }
+
+    function showAnalysisForm(word, partOfSpeech) {
+        const formContainer = document.getElementById(`form-${word}`);
+        formContainer.style.display = 'block';
+        formContainer.innerHTML = '';
+
+        const template = analysisTemplates[partOfSpeech] || analysisTemplates['существительное'];
+        
+        // Инициализируем объект для ответов этого слова
+        if (!morphAnswers[word]) {
+            morphAnswers[word] = {};
+        }
+        
+        template.forEach(field => {
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.setAttribute('data-prop', field.prop);
+            
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.textContent = field.title;
+            section.appendChild(title);
+
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'btn-group';
+
+            field.options.forEach(option => {
+                const optionBtn = document.createElement('button');
+                optionBtn.className = 'option';
+                optionBtn.textContent = option;
+                optionBtn.addEventListener('click', () => {
+                    btnGroup.querySelectorAll('.option').forEach(b => {
+                        b.classList.remove('active', 'option-correct', 'option-incorrect');
+                    });
+                    optionBtn.classList.add('active');
+                    
+                    // Сохраняем выбор пользователя
+                    morphAnswers[word][field.prop] = option;
+                    
+                    // Мгновенная проверка этого параметра
+                    if (wordData[word] && wordData[word].analysis) {
+                        const correctValue = wordData[word].analysis[field.prop];
+                        
+                        if (correctValue) {
+                            if (option === correctValue) {
+                                optionBtn.classList.add('option-correct');
+                            } else {
+                                optionBtn.classList.add('option-incorrect');
+                            }
+                        }
+                    }
+                    
+                    // Проверяем все ли параметры заполнены
+                    checkIfAllMorphFieldsFilled(word);
+                    
+                    // Показываем кнопку проверки если есть хотя бы один ответ
+                    document.getElementById('morph-check-btn').style.display = 'block';
+                });
+                btnGroup.appendChild(optionBtn);
+            });
+
+            section.appendChild(btnGroup);
+            formContainer.appendChild(section);
+        });
+    }
+
+    function checkIfAllMorphFieldsFilled(word) {
+        if (!wordData[word] || !wordData[word].analysis) return;
+        
+        const correctAnswers = wordData[word].analysis;
+        const userAnswers = morphAnswers[word];
+        const formContainer = document.getElementById(`form-${word}`);
+        
+        if (!formContainer || !userAnswers) return;
+        
+        let allFilled = true;
+        let allCorrect = true;
+        
+        for (let prop in correctAnswers) {
+            if (!userAnswers[prop]) {
+                allFilled = false;
+                break;
+            }
+            if (userAnswers[prop] !== correctAnswers[prop]) {
+                allCorrect = false;
+            }
+        }
+        
+        const resultMsg = document.getElementById('morph-result-message');
+        
+        if (allFilled) {
+            if (allCorrect) {
+                resultMsg.className = 'result-message success';
+                resultMsg.textContent = '🎉 Отлично! Морфологический разбор выполнен правильно!';
+                resultMsg.style.display = 'block';
+                document.getElementById('morph-check-btn').disabled = true;
+            } else {
+                resultMsg.className = 'result-message error';
+                resultMsg.textContent = `Есть ошибки в морфологическом разборе. Проверьте параметры, отмеченные красным.`;
+                resultMsg.style.display = 'block';
+            }
+        } else {
+            resultMsg.style.display = 'none';
+            document.getElementById('morph-check-btn').disabled = false;
+        }
+    }
+
+    function applyPartOfSpeech(word, part) {
+        userChoices[word] = part;
+        
+        const wordEl = document.querySelector(`[data-word="${word}"]`);
+        wordEl.setAttribute('data-part', part);
+        wordEl.setAttribute('data-part-abbr', abbreviations[part] || part);
+    }
+
+    function checkVariant() {
+        const variant = sentenceVariants[currentVariant];
+        const resultMsg = document.getElementById('result-message');
+        let errors = 0;
+        let total = Object.keys(variant.correct).length;
+        let notProcessed = 0;
+        
+        document.querySelectorAll('.word').forEach(wordEl => {
+            const word = wordEl.getAttribute('data-word');
+            wordEl.classList.remove('correct', 'incorrect', 'not-processed');
+            
+            if (variant.correct[word]) {
+                if (userChoices[word]) {
+                    // Слово обработано - проверяем правильность
+                    if (userChoices[word] === variant.correct[word]) {
+                        wordEl.classList.add('correct');
+                    } else {
+                        wordEl.classList.add('incorrect');
+                        errors++;
+                    }
+                } else {
+                    // Слово не обработано - выделяем желтым
+                    wordEl.classList.add('not-processed');
+                    notProcessed++;
+                }
+            }
+        });
+        
+        if (notProcessed > 0) {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Не все слова обработаны. Обработано: ${Object.keys(userChoices).length} из ${total}. Слова, выделенные желтым, требуют определения части речи.`;
+            resultMsg.style.display = 'block';
+        } else if (errors === 0) {
+            resultMsg.className = 'result-message success';
+            resultMsg.textContent = '🎉 Отлично! Все правильно!';
+            resultMsg.style.display = 'block';
+            completedVariants.add(currentVariant);
+            updateVariantButtons();
+            updateStats();
+            document.getElementById('check-btn').disabled = true;
+            
+            // Показываем модальное окно для ввода имени
+            showNameModal(total, errors);
+        } else {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Есть ошибки. Проверьте слова, отмеченные красным. Правильных ответов: ${total - errors} из ${total}`;
+            resultMsg.style.display = 'block';
+        }
+    }
+
+    function updateVariantButtons() {
+        sentenceVariants.forEach((_, index) => {
+            const btn = document.getElementById(`variant-${index}`);
+            const check = document.getElementById(`check-${index}`);
+            
+            btn.classList.remove('active', 'completed');
+            
+            if (index === currentVariant) {
+                btn.classList.add('active');
+            }
+            
+            if (completedVariants.has(index)) {
+                btn.classList.add('completed');
+                check.textContent = '✓';
+            } else {
+                check.textContent = '';
+            }
+        });
+    }
+
+    function checkMorphology() {
+        const resultMsg = document.getElementById('morph-result-message');
+        let totalWords = 0;
+        let correctWords = 0;
+        let processedWords = 0;
+        
+        // Проходим по всем словам которые есть в wordData
+        for (let word in wordData) {
+            totalWords++;
+            
+            if (morphAnswers[word]) {
+                processedWords++;
+                const correctAnswers = wordData[word].analysis;
+                const userAnswers = morphAnswers[word];
+                
+                let wordCorrect = true;
+                for (let prop in correctAnswers) {
+                    if (userAnswers[prop] !== correctAnswers[prop]) {
+                        wordCorrect = false;
+                        break;
+                    }
+                }
+                
+                if (wordCorrect && Object.keys(userAnswers).length === Object.keys(correctAnswers).length) {
+                    correctWords++;
+                }
+            }
+        }
+        
+        if (processedWords === 0) {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = 'Выберите хотя бы одно слово и заполните его разбор';
+            resultMsg.style.display = 'block';
+            return;
+        }
+        
+        if (correctWords === processedWords && processedWords === totalWords) {
+            resultMsg.className = 'result-message success';
+            resultMsg.textContent = `🎉 Отлично! Все ${totalWords} слов разобраны правильно!`;
+            resultMsg.style.display = 'block';
+            document.getElementById('morph-check-btn').disabled = true;
+        } else {
+            resultMsg.className = 'result-message error';
+            resultMsg.textContent = `Обработано слов: ${processedWords} из ${totalWords}. Правильно разобрано: ${correctWords}. Неправильные параметры отмечены красным.`;
+            resultMsg.style.display = 'block';
+        }
+    }
+
+    function switchMainTab(mode) {
+        currentMode = mode;
+        
+        document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.main-tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (mode === 'parts') {
+            document.querySelector('.main-tab[onclick*="parts"]').classList.add('active');
+            document.getElementById('parts-tab').classList.add('active');
+        } else {
+            document.querySelector('.main-tab[onclick*="morphology"]').classList.add('active');
+            document.getElementById('morphology-tab').classList.add('active');
+        }
+    }
+
+    // ================ LEADERBOARD FUNCTIONS ================
+    
+    let currentCorrect = 0;
+    let currentTotal = 0;
+
+    function showNameModal(total, errors) {
+        currentCorrect = total - errors;
+        currentTotal = total;
+        
+        const modal = document.getElementById('name-modal');
+        modal.style.display = 'flex';
+        
+        const message = document.getElementById('modal-message');
+        message.textContent = `Вы правильно определили ${currentCorrect} из ${currentTotal} слов в варианте ${currentVariant + 1}!`;
+    }
+
+    function closeNameModal() {
+        const modal = document.getElementById('name-modal');
+        modal.style.display = 'none';
+        document.getElementById('user-name-input').value = '';
+    }
+
+    async function saveToLeaderboard() {
+        const nameInput = document.getElementById('user-name-input');
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            alert('Пожалуйста, введите ваше имя');
+            return;
+        }
+
+        try {
+            const variantId = await getCurrentVariantId();
+            if (!variantId) {
+                alert('Не удалось определить вариант теста в базе данных.');
+                return;
+            }
+
+            const totalCorrect = currentCorrect;
+            const totalQuestions = currentTotal;
+            const totalIncorrect = totalQuestions - totalCorrect;
+
+            const userAnswers = {
+                parts: userChoices,
+                morphology: morphAnswers,
+                variant_number: currentVariant + 1
+            };
+
+            const response = await fetch(`${API_BASE_URL}/tests/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: name,
+                    variant_id: variantId,
+                    total_questions: totalQuestions,
+                    correct_answers: totalCorrect,
+                    incorrect_answers: totalIncorrect,
+                    user_answers: userAnswers,
+                    time_spent_seconds: getTimeSpentSeconds()
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            closeNameModal();
+            
+            // Показываем уведомление
+            const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+            alert(`✓ Результат сохранён! ${name}: ${totalCorrect}/${totalQuestions} (${accuracy.toFixed(1)}%)`);
+            
+        } catch (error) {
+            console.error('Ошибка сохранения в leaderboard:', error);
+            alert('Не удалось сохранить результат. Попробуйте ещё раз.');
+        }
+    }
+
+    function updateStats() {
+        const statsSection = document.getElementById('stats-section');
+        const completed = completedVariants.size;
+        const total = sentenceVariants.length;
+        
+        if (completed > 0) {
+            statsSection.style.display = 'block';
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-total').textContent = total;
+            
+            const accuracy = (completed / total) * 100;
+            document.getElementById('stat-accuracy').textContent = accuracy.toFixed(0) + '%';
+        }
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
