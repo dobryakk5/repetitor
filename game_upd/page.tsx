@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { games, getGame, getRelated } from './games'
-import { SECTIONS } from './types'
-import { SectionBadge, TypeBadge } from './Badges'
-import { ItemsList }     from './ItemsList'
-import { RiddlesList }   from './RiddlesList'
-import { QuizList }      from './QuizList'
-import { CrosswordView } from './CrosswordView'
-import { RelatedCard }   from './RelatedCard'
+import { games, getGame, getRelated } from '@/data/games'
+import { SECTIONS } from '@/data/types'
+import { SectionBadge, TypeBadge } from '@/components/Badges'
+import { ItemsList }     from '@/components/ItemsList'
+import { RiddlesList }   from '@/components/RiddlesList'
+import { QuizList }      from '@/components/QuizList'
+import { CrosswordView } from '@/components/CrosswordView'
+import { RelatedCard }   from '@/components/RelatedCard'
 
 // Pre-generate all game pages at build time
 export async function generateStaticParams() {
@@ -125,7 +125,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         fontSize: '0.75rem', fontFamily: "'Martel', serif",
         borderTop: '4px solid #8B1A1A', marginTop: '1rem',
       }}>
-        Занимательная грамматика
+        Занимательная грамматика · А. Т. Арсирий, Г. М. Дмитриева · Учпедгиз, Москва, 1963
       </footer>
     </main>
   )
