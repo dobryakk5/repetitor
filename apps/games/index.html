@@ -1,218 +1,598 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎲 Занимательная грамматика</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎲 Занимательная грамматика</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #24160e 0%, #4a2f1a 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #2b2118;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #24160e 0%, #4a2f1a 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #2b2118;
+    }
 
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
+    .container { max-width: 1200px; margin: 0 auto; }
 
-        .header {
-            background: #f7ecdc;
-            border-radius: 18px;
-            padding: 28px;
-            box-shadow: 0 14px 30px rgba(0,0,0,0.25);
-            margin-bottom: 20px;
-            border: 2px solid #d5b38b;
-        }
+    .header {
+      background: #f7ecdc;
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.25);
+      margin-bottom: 16px;
+      border: 2px solid #d5b38b;
+    }
 
-        .header-top {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 12px;
-            align-items: center;
-        }
+    .header-top {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
 
-        .back-btn {
-            justify-self: start;
-            border: none;
-            border-radius: 10px;
-            background: #8b1a1a;
-            color: #fff;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 12px rgba(139,26,26,0.35);
-        }
+    .back-btn {
+      justify-self: start;
+      border: none;
+      border-radius: 10px;
+      background: #8b1a1a;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 5px 12px rgba(139,26,26,0.35);
+    }
 
-        .back-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(139,26,26,0.45);
-        }
+    .back-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(139,26,26,0.45);
+    }
 
-        .title {
-            text-align: center;
-        }
+    .title { text-align: center; }
 
-        .title h1 {
-            font-size: clamp(28px, 5vw, 42px);
-            color: #4a2f1a;
-            margin-bottom: 8px;
-        }
+    .title h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      color: #4a2f1a;
+      margin-bottom: 8px;
+    }
 
-        .subtitle {
-            color: #735741;
-            text-align: center;
-            font-size: 15px;
-            line-height: 1.5;
-        }
+    .muted { color: #735741; font-size: 14px; text-align: center; }
 
-        .stats {
-            margin-top: 18px;
-            display: flex;
-            justify-content: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
+    .stats {
+      margin-top: 14px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-        .badge {
-            background: #efe0c8;
-            border: 1px solid #d5b38b;
-            color: #5a3e28;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 8px 12px;
-            border-radius: 999px;
-        }
+    .badge {
+      background: #efe0c8;
+      border: 1px solid #d5b38b;
+      color: #5a3e28;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 11px;
+      border-radius: 999px;
+    }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 16px;
-        }
+    .panel {
+      background: #fff7ea;
+      border: 2px solid #e8cfab;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
 
-        .card {
-            background: #fff7ea;
-            border: 2px solid #e8cfab;
-            border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-        }
+    .toolbar {
+      background: #f2e4cf;
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2cba7;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .card h2 {
-            color: #4a2f1a;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .card p {
-            color: #6a4e39;
-            margin-bottom: 14px;
-            line-height: 1.5;
-            font-size: 14px;
-        }
+    .filter-label {
+      font-size: 11px;
+      letter-spacing: .08em;
+      color: #6a4d34;
+      font-weight: 700;
+    }
 
-        .list {
-            list-style: none;
-            display: grid;
-            gap: 8px;
-        }
+    .pill {
+      border: 1px solid #cfa97c;
+      border-radius: 999px;
+      background: transparent;
+      color: #5a3e28;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
 
-        .list li {
-            background: rgba(255,255,255,0.65);
-            border: 1px solid #ead9bf;
-            border-radius: 10px;
-            padding: 9px 10px;
-            font-size: 13px;
-            color: #4f3828;
-        }
+    .pill.active {
+      background: #8b1a1a;
+      border-color: #8b1a1a;
+      color: #fff;
+    }
 
-        .source-box {
-            margin-top: 20px;
-            background: #f7ecdc;
-            border-radius: 16px;
-            border: 2px dashed #d5b38b;
-            padding: 18px;
-            color: #654834;
-            line-height: 1.5;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
+    .content { padding: 14px; }
 
-        .source-box code {
-            background: #f0dfc2;
-            padding: 2px 6px;
-            border-radius: 6px;
-            color: #4a2f1a;
-        }
+    .count {
+      text-align: center;
+      color: #7c5a40;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
 
-        @media (max-width: 768px) {
-            .header-top { grid-template-columns: 1fr; }
-            .back-btn { justify-self: center; }
-        }
-    </style>
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: #fffbf4;
+      border: 1px solid #e8cfab;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.08);
+      transition: transform .18s, box-shadow .18s;
+      cursor: pointer;
+      min-height: 170px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.14);
+    }
+
+    .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .chip {
+      background: #f1e2cb;
+      border: 1px solid #dec4a0;
+      border-radius: 8px;
+      font-size: 11px;
+      padding: 3px 6px;
+      color: #5b3f2b;
+      font-weight: 600;
+    }
+
+    .card h3 {
+      color: #3f2a1c;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .topic {
+      font-size: 12px;
+      color: #8b6a4d;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-weight: 700;
+    }
+
+    .desc {
+      color: #5d4634;
+      font-size: 13px;
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .source { color: #8f7358; font-size: 12px; }
+
+    .detail {
+      background: #fffbf4;
+      border-top: 1px solid #ead8bd;
+      padding: 16px;
+      display: none;
+    }
+
+    .detail.open { display: block; }
+
+    .detail-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .detail-title { color: #3f2a1c; font-size: 24px; }
+
+    .close-btn {
+      border: 1px solid #c9a980;
+      border-radius: 8px;
+      background: #f2e4cf;
+      color: #5a3e28;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .detail-description {
+      color: #5d4634;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .section-title {
+      margin-top: 10px;
+      margin-bottom: 8px;
+      color: #4a2f1a;
+      font-size: 18px;
+    }
+
+    .qa-list { display: grid; gap: 8px; }
+
+    .qa-item {
+      border: 1px solid #e7d2b2;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .question {
+      color: #2f2116;
+      line-height: 1.5;
+      margin-bottom: 6px;
+      white-space: pre-line;
+    }
+
+    .hint {
+      color: #8b6a4d;
+      font-style: italic;
+      font-size: 13px;
+      margin-bottom: 6px;
+      white-space: pre-line;
+    }
+
+    details > summary {
+      cursor: pointer;
+      color: #8b1a1a;
+      font-weight: 700;
+      font-size: 13px;
+      list-style: none;
+    }
+
+    details > summary::-webkit-details-marker { display: none; }
+
+    .answer {
+      margin-top: 6px;
+      background: #fbf1e2;
+      border-left: 3px solid #8b1a1a;
+      padding: 8px;
+      color: #3d2c1f;
+      white-space: pre-line;
+      line-height: 1.45;
+    }
+
+    .cross-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .cross-col {
+      border: 1px solid #e7d2b2;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .cross-col h4 {
+      margin-bottom: 6px;
+      color: #4a2f1a;
+      font-size: 15px;
+    }
+
+    .cross-item {
+      font-size: 13px;
+      color: #2f2116;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 900px) {
+      .cross-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .header-top { grid-template-columns: 1fr; }
+      .back-btn { justify-self: center; }
+      .detail-title { font-size: 20px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <div class="header-top">
-                <button onclick="window.location.href='/index.html'" class="back-btn">← Назад к тестам</button>
-                <div class="title">
-                    <h1>🎲 Занимательная грамматика</h1>
-                </div>
-                <div></div>
-            </div>
-            <div class="stats">
-                <span class="badge">Фонетика: 7 игр</span>
-                <span class="badge">Морфология: 8 игр</span>
-                <span class="badge">Лексика: 8 игр</span>
-                <span class="badge">Всего: 26 материалов</span>
-            </div>
-        </header>
-
-        <main class="grid">
-            <section class="card">
-                <h2>🔊 Фонетика</h2>
-                <p>Игры на звуки, ударение и орфоэпию: логогрифы, загадки и блиц‑викторины.</p>
-                <ul class="list">
-                    <li>Логогрифы</li>
-                    <li>Кто скорее?</li>
-                    <li>Одним словом</li>
-                    <li>Викторина по фонетике</li>
-                </ul>
-            </section>
-
-            <section class="card">
-                <h2>🧩 Морфология</h2>
-                <p>Материалы по составу слова, частям речи и словообразованию в формате заданий и шарад.</p>
-                <ul class="list">
-                    <li>Родственные слова</li>
-                    <li>Шарады</li>
-                    <li>Тайны словаря</li>
-                    <li>Вопросы к викторине</li>
-                </ul>
-            </section>
-
-            <section class="card">
-                <h2>📚 Лексика</h2>
-                <p>Омонимы, антонимы, синонимы и словесные игры для расширения словарного запаса.</p>
-                <ul class="list">
-                    <li>Угадай омоним</li>
-                    <li>Кроссворд «Синонимы»</li>
-                    <li>Равнобуквенные синонимы</li>
-                    <li>Загадки с антонимами</li>
-                </ul>
-            </section>
-        </main>
-
-        <div class="source-box">
-            Полная база игр уже добавлена в проект: <code>/apps/games/games.ts</code> и <code>/apps/games/page.tsx</code>.<br>
-            Эту страницу можно использовать как вход в раздел и точку интеграции с главным меню.
+  <div class="container">
+    <header class="header">
+      <div class="header-top">
+        <button onclick="window.location.href='/index.html'" class="back-btn">← Назад к тестам</button>
+        <div class="title">
+          <h1>🎲 Занимательная грамматика</h1>
+          <p class="muted">Обновлённый набор из папки game_upd</p>
         </div>
-    </div>
+        <div></div>
+      </div>
+      <div class="stats">
+        <span class="badge" id="stat-total">Всего: 0</span>
+        <span class="badge" id="stat-phonetics">Фонетика: 0</span>
+        <span class="badge" id="stat-morphology">Морфология: 0</span>
+        <span class="badge" id="stat-lexics">Лексика: 0</span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div class="filter-group" id="sectionFilters"></div>
+        <div class="filter-group" id="typeFilters"></div>
+      </div>
+      <div class="content">
+        <div class="count" id="count"></div>
+        <div class="grid" id="grid"></div>
+      </div>
+      <div class="detail" id="detail"></div>
+    </section>
+  </div>
+
+  <script src="./games-data.js"></script>
+  <script>
+    const games = Array.isArray(window.GAMES) ? window.GAMES : [];
+
+    const SECTIONS = {
+      all: { title: 'Все' },
+      phonetics: { title: 'Фонетика', emoji: '🔤' },
+      morphology: { title: 'Морфология', emoji: '📚' },
+      lexics: { title: 'Лексика', emoji: '📖' }
+    };
+
+    const TYPES = {
+      all: { title: 'Все', emoji: '📋' },
+      game: { title: 'Игра', emoji: '🎮' },
+      riddle: { title: 'Загадка', emoji: '🔮' },
+      puzzle: { title: 'Головоломка', emoji: '🧩' },
+      quiz: { title: 'Викторина', emoji: '❓' },
+      crossword: { title: 'Кроссворд', emoji: '📝' }
+    };
+
+    const state = { section: 'all', type: 'all', selectedId: null, showCrossAnswers: false };
+
+    const sectionFilters = document.getElementById('sectionFilters');
+    const typeFilters = document.getElementById('typeFilters');
+    const countEl = document.getElementById('count');
+    const gridEl = document.getElementById('grid');
+    const detailEl = document.getElementById('detail');
+
+    function esc(v) {
+      return String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function updateStats() {
+      const total = games.length;
+      const by = (section) => games.filter(g => g.section === section).length;
+      document.getElementById('stat-total').textContent = `Всего: ${total}`;
+      document.getElementById('stat-phonetics').textContent = `Фонетика: ${by('phonetics')}`;
+      document.getElementById('stat-morphology').textContent = `Морфология: ${by('morphology')}`;
+      document.getElementById('stat-lexics').textContent = `Лексика: ${by('lexics')}`;
+    }
+
+    function renderFilters() {
+      const secKeys = Object.keys(SECTIONS);
+      const typeKeys = Object.keys(TYPES);
+
+      sectionFilters.innerHTML = `<span class=\"filter-label\">РАЗДЕЛ:</span>` + secKeys.map(key => {
+        const s = SECTIONS[key];
+        const label = s.emoji ? `${s.emoji} ${s.title}` : s.title;
+        return `<button class=\"pill ${state.section === key ? 'active' : ''}\" data-section=\"${key}\">${esc(label)}</button>`;
+      }).join('');
+
+      typeFilters.innerHTML = `<span class=\"filter-label\">ТИП:</span>` + typeKeys.map(key => {
+        const t = TYPES[key];
+        const label = `${t.emoji} ${t.title}`;
+        return `<button class=\"pill ${state.type === key ? 'active' : ''}\" data-type=\"${key}\">${esc(label)}</button>`;
+      }).join('');
+
+      sectionFilters.querySelectorAll('[data-section]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.section = btn.getAttribute('data-section');
+          state.selectedId = null;
+          render();
+        });
+      });
+
+      typeFilters.querySelectorAll('[data-type]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.type = btn.getAttribute('data-type');
+          state.selectedId = null;
+          render();
+        });
+      });
+    }
+
+    function filteredGames() {
+      return games.filter(g =>
+        (state.section === 'all' || g.section === state.section) &&
+        (state.type === 'all' || g.type === state.type)
+      );
+    }
+
+    function renderGrid(list) {
+      countEl.textContent = `Найдено: ${list.length}`;
+
+      if (!list.length) {
+        gridEl.innerHTML = `<div class=\"card\"><p class=\"desc\">Ничего не найдено по выбранным фильтрам.</p></div>`;
+        return;
+      }
+
+      gridEl.innerHTML = list.map(g => {
+        const section = SECTIONS[g.section] || { title: g.section };
+        const type = TYPES[g.type] || { title: g.type, emoji: '📋' };
+        return `
+          <article class="card" data-open-id="${esc(g.id)}">
+            <div class="meta">
+              <span class="chip">${esc((section.emoji || '') + ' ' + section.title)}</span>
+              <span class="chip">${esc(type.emoji + ' ' + type.title)}</span>
+            </div>
+            <h3>${esc(g.title)}</h3>
+            <div class="topic">${esc(g.topic || '')}</div>
+            <p class="desc">${esc(g.description || '')}</p>
+            <div class="source">${esc(g.source || '')}</div>
+          </article>
+        `;
+      }).join('');
+
+      gridEl.querySelectorAll('[data-open-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          state.selectedId = el.getAttribute('data-open-id');
+          state.showCrossAnswers = false;
+          renderDetail();
+        });
+      });
+    }
+
+    function renderQaBlock(title, rows) {
+      if (!rows || !rows.length) return '';
+      return `
+        <h3 class="section-title">${esc(title)}</h3>
+        <div class="qa-list">
+          ${rows.map((row) => `
+            <div class="qa-item">
+              <p class="question">${esc(row.question || row.text || '')}</p>
+              ${row.hint ? `<p class="hint">💡 ${esc(row.hint)}</p>` : ''}
+              ${(row.answer || '').length ? `
+                <details>
+                  <summary>Показать ответ</summary>
+                  <div class="answer">${esc(row.answer)}</div>
+                </details>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderCrossword(game) {
+      if (!game.crossword) return '';
+      const show = state.showCrossAnswers;
+      const cross = game.crossword;
+      const renderList = (items) => items.map(c => `
+        <div class="cross-item">
+          <strong>${esc(c.number)}.</strong> ${esc(c.clue)}
+          ${show ? `<div class=\"answer\" style=\"margin-top:4px;\">${esc(c.answer)}</div>` : ''}
+        </div>
+      `).join('');
+
+      return `
+        <h3 class="section-title">Кроссворд</h3>
+        <div style="margin-bottom:8px;">
+          <button class="close-btn" id="toggleCrossAnswers">${show ? 'Скрыть ответы' : 'Показать ответы'}</button>
+        </div>
+        <div class="cross-grid">
+          <div class="cross-col">
+            <h4>По горизонтали</h4>
+            ${renderList(cross.across || [])}
+          </div>
+          <div class="cross-col">
+            <h4>По вертикали</h4>
+            ${renderList(cross.down || [])}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDetail() {
+      if (!state.selectedId) {
+        detailEl.classList.remove('open');
+        detailEl.innerHTML = '';
+        return;
+      }
+
+      const game = games.find(g => g.id === state.selectedId);
+      if (!game) {
+        detailEl.classList.remove('open');
+        detailEl.innerHTML = '';
+        return;
+      }
+
+      const section = SECTIONS[game.section] || { title: game.section };
+      const type = TYPES[game.type] || { title: game.type, emoji: '📋' };
+
+      detailEl.innerHTML = `
+        <div class="detail-top">
+          <div>
+            <div class="meta" style="margin-bottom:6px;">
+              <span class="chip">${esc((section.emoji || '') + ' ' + section.title)}</span>
+              <span class="chip">${esc(type.emoji + ' ' + type.title)}</span>
+              <span class="chip">${esc(game.source || '')}</span>
+            </div>
+            <h2 class="detail-title">${esc(game.title)}</h2>
+          </div>
+          <button class="close-btn" id="closeDetail">Закрыть</button>
+        </div>
+        <p class="detail-description">${esc(game.description || '')}</p>
+        ${renderQaBlock('Задания', game.items || [])}
+        ${renderQaBlock('Загадки', game.riddles || [])}
+        ${renderQaBlock('Викторина', game.quiz || [])}
+        ${renderCrossword(game)}
+      `;
+
+      detailEl.classList.add('open');
+
+      const close = document.getElementById('closeDetail');
+      if (close) {
+        close.addEventListener('click', () => {
+          state.selectedId = null;
+          detailEl.classList.remove('open');
+          detailEl.innerHTML = '';
+        });
+      }
+
+      const toggleCross = document.getElementById('toggleCrossAnswers');
+      if (toggleCross) {
+        toggleCross.addEventListener('click', () => {
+          state.showCrossAnswers = !state.showCrossAnswers;
+          renderDetail();
+        });
+      }
+
+      detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function render() {
+      renderFilters();
+      const list = filteredGames();
+      renderGrid(list);
+      renderDetail();
+    }
+
+    updateStats();
+    render();
+  </script>
 </body>
 </html>
