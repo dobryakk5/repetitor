@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 Занимательная грамматика</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #24160e 0%, #4a2f1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2b2118;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: #f7ecdc;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 14px 30px rgba(0,0,0,0.25);
+            margin-bottom: 20px;
+            border: 2px solid #d5b38b;
+        }
+
+        .header-top {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .back-btn {
+            justify-self: start;
+            border: none;
+            border-radius: 10px;
+            background: #8b1a1a;
+            color: #fff;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 12px rgba(139,26,26,0.35);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(139,26,26,0.45);
+        }
+
+        .title {
+            text-align: center;
+        }
+
+        .title h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            color: #4a2f1a;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #735741;
+            text-align: center;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .stats {
+            margin-top: 18px;
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: #efe0c8;
+            border: 1px solid #d5b38b;
+            color: #5a3e28;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 999px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #fff7ea;
+            border: 2px solid #e8cfab;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+        }
+
+        .card h2 {
+            color: #4a2f1a;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .card p {
+            color: #6a4e39;
+            margin-bottom: 14px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .list {
+            list-style: none;
+            display: grid;
+            gap: 8px;
+        }
+
+        .list li {
+            background: rgba(255,255,255,0.65);
+            border: 1px solid #ead9bf;
+            border-radius: 10px;
+            padding: 9px 10px;
+            font-size: 13px;
+            color: #4f3828;
+        }
+
+        .source-box {
+            margin-top: 20px;
+            background: #f7ecdc;
+            border-radius: 16px;
+            border: 2px dashed #d5b38b;
+            padding: 18px;
+            color: #654834;
+            line-height: 1.5;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .source-box code {
+            background: #f0dfc2;
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: #4a2f1a;
+        }
+
+        @media (max-width: 768px) {
+            .header-top { grid-template-columns: 1fr; }
+            .back-btn { justify-self: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-top">
+                <button onclick="window.location.href='/index.html'" class="back-btn">← Назад к тестам</button>
+                <div class="title">
+                    <h1>🎲 Занимательная грамматика</h1>
+                    <p class="subtitle">Сборник игровых заданий по русскому языку на основе материалов А. Т. Арсирий и Г. М. Дмитриевой</p>
+                </div>
+                <div></div>
+            </div>
+            <div class="stats">
+                <span class="badge">Фонетика: 7 игр</span>
+                <span class="badge">Морфология: 8 игр</span>
+                <span class="badge">Лексика: 8 игр</span>
+                <span class="badge">Всего: 26 материалов</span>
+            </div>
+        </header>
+
+        <main class="grid">
+            <section class="card">
+                <h2>🔊 Фонетика</h2>
+                <p>Игры на звуки, ударение и орфоэпию: логогрифы, загадки и блиц‑викторины.</p>
+                <ul class="list">
+                    <li>Логогрифы</li>
+                    <li>Кто скорее?</li>
+                    <li>Одним словом</li>
+                    <li>Викторина по фонетике</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>🧩 Морфология</h2>
+                <p>Материалы по составу слова, частям речи и словообразованию в формате заданий и шарад.</p>
+                <ul class="list">
+                    <li>Родственные слова</li>
+                    <li>Шарады</li>
+                    <li>Тайны словаря</li>
+                    <li>Вопросы к викторине</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>📚 Лексика</h2>
+                <p>Омонимы, антонимы, синонимы и словесные игры для расширения словарного запаса.</p>
+                <ul class="list">
+                    <li>Угадай омоним</li>
+                    <li>Кроссворд «Синонимы»</li>
+                    <li>Равнобуквенные синонимы</li>
+                    <li>Загадки с антонимами</li>
+                </ul>
+            </section>
+        </main>
+
+        <div class="source-box">
+            Полная база игр уже добавлена в проект: <code>/apps/games/games.ts</code> и <code>/apps/games/page.tsx</code>.<br>
+            Эту страницу можно использовать как вход в раздел и точку интеграции с главным меню.
+        </div>
+    </div>
+</body>
+</html>
