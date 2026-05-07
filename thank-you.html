@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Спасибо за участие в летней программе Вспомнить всё.">
+    <title>Спасибо за участие — Вспомнить всё</title>
+    <style>
+        :root {
+            --primary: #5f6eea;
+            --primary-dark: #4756ce;
+            --secondary: #7c4dff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+            --bg: #f7f8ff;
+            --green: #10b981;
+            --shadow: 0 18px 50px rgba(31, 41, 55, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 10%, rgba(95, 110, 234, .18), transparent 30%),
+                radial-gradient(circle at 90% 20%, rgba(124, 77, 255, .16), transparent 32%),
+                var(--bg);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .card {
+            width: min(720px, 100%);
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 34px;
+            box-shadow: var(--shadow);
+            padding: clamp(28px, 5vw, 52px);
+            text-align: center;
+        }
+
+        .mark {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 22px;
+            border-radius: 24px;
+            display: grid;
+            place-items: center;
+            color: white;
+            font-size: 38px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--green), #34d399);
+            box-shadow: 0 14px 30px rgba(16, 185, 129, .28);
+        }
+
+        h1 {
+            font-size: clamp(34px, 6vw, 56px);
+            line-height: 1;
+            letter-spacing: -.04em;
+            margin-bottom: 18px;
+        }
+
+        p {
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.65;
+            margin: 0 auto 16px;
+            max-width: 560px;
+        }
+
+        .status {
+            margin: 24px auto 0;
+            max-width: 560px;
+            background: #f2edff;
+            border: 1px solid rgba(95, 110, 234, .18);
+            border-radius: 20px;
+            padding: 18px;
+            text-align: left;
+            color: var(--text);
+        }
+
+        .status strong {
+            color: var(--primary-dark);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 14px 22px;
+            text-decoration: none;
+            font-weight: 800;
+            border: 1px solid rgba(95, 110, 234, .26);
+            color: var(--primary-dark);
+            background: white;
+        }
+
+        .btn-primary {
+            color: white;
+            border: 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 12px 28px rgba(95, 110, 234, .35);
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <div class="mark">✓</div>
+        <h1>Спасибо!</h1>
+        <p>Оплата завершена, и заявка передана в обработку.</p>
+        <p>После подтверждения платежа от ЮMoney на указанную почту автоматически придёт письмо о зачислении на курс.</p>
+
+        <div class="status" id="payment-status">
+            <strong>Статус:</strong> ждём подтверждение оплаты от ЮMoney. Обычно это занимает немного времени.
+        </div>
+
+        <div class="actions">
+            <a class="btn btn-primary" href="/">Вернуться на главную</a>
+            <a class="btn" href="/training/">Открыть тренировку</a>
+        </div>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const order = params.get('order');
+        const statusBox = document.getElementById('payment-status');
+
+        async function loadPaymentStatus() {
+            if (!order || !statusBox) return;
+
+            try {
+                const response = await fetch(`/api/payments/orders/${encodeURIComponent(order)}`);
+                const data = await response.json();
+
+                if (!response.ok) return;
+
+                if (data.status === 'paid' && data.emailStatus === 'sent') {
+                    statusBox.innerHTML = `<strong>Статус:</strong> оплата подтверждена. Письмо о зачислении отправлено на ${data.email}.`;
+                    return;
+                }
+
+                if (data.status === 'paid') {
+                    statusBox.innerHTML = `<strong>Статус:</strong> оплата подтверждена. Письмо на ${data.email} отправляется.`;
+                    return;
+                }
+
+                if (data.status === 'payment_amount_mismatch') {
+                    statusBox.innerHTML = '<strong>Статус:</strong> оплата получена, но сумма отличается от ожидаемой. Мы проверим заявку вручную.';
+                    return;
+                }
+
+                statusBox.innerHTML = `<strong>Статус:</strong> заявка создана. Ждём подтверждение оплаты от ЮMoney для ${data.email}.`;
+            } catch (_) {
+                // Страница спасибо должна открываться даже если API временно недоступен.
+            }
+        }
+
+        loadPaymentStatus();
+        setTimeout(loadPaymentStatus, 5000);
+    </script>
+</body>
+</html>

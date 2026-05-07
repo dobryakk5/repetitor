@@ -1,4 +1,4 @@
-// server.js
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -7,67 +7,50 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Логирование запросов
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
     next();
 });
 
-// Routes
-const userRoutes = require('./routes/users');
-const testRoutes = require('./routes/tests');
-const leaderboardRoutes = require('./routes/leaderboard');
-const statsRoutes = require('./routes/stats');
+// Платежи и подтверждение оплаты ЮMoney.
+app.use('/api/payments', require('./backend/routes/payments'));
 
-app.use('/api/users', userRoutes);
-app.use('/api/tests', testRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
-app.use('/api/stats', statsRoutes);
+// Старые API тренажёров подключаются при наличии PostgreSQL и backend-модулей.
+try {
+    app.use('/api/users', require('./backend/routes/users'));
+    app.use('/api/tests', require('./backend/routes/tests'));
+    app.use('/api/leaderboard', require('./backend/routes/leaderboard'));
+    app.use('/api/stats', require('./backend/routes/stats'));
+} catch (error) {
+    console.warn('Training API routes were not mounted:', error.message);
+}
 
-// Главная страница API
-app.get('/', (req, res) => {
-    res.json({
-        message: 'Russian Tests API',
-        version: '1.0.0',
-        endpoints: {
-            users: '/api/users',
-            tests: '/api/tests',
-            leaderboard: '/api/leaderboard',
-            stats: '/api/stats'
-        }
-    });
-});
-
-// Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// 404 handler
+// Раздача статических файлов лендинга и раздела «Тренировка».
+app.use(express.static(__dirname, {
+    extensions: ['html']
+}));
+
 app.use((req, res) => {
-    res.status(404).json({ error: 'Endpoint not found' });
+    res.status(404).sendFile(path.join(__dirname, '404.html'), (error) => {
+        if (error) res.status(404).json({ error: 'Not found' });
+    });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
-// Запуск сервера
 app.listen(PORT, () => {
-    console.log(`
-╔═══════════════════════════════════════╗
-║   🚀 Server is running on port ${PORT}  ║
-║   📝 Environment: ${process.env.NODE_ENV || 'development'}        ║
-║   🌐 http://localhost:${PORT}           ║
-╚═══════════════════════════════════════╝
-    `);
+    console.log(`Site server is running on http://localhost:${PORT}`);
 });
 
 module.exports = app;

@@ -24,11 +24,13 @@ const userRoutes = require('./routes/users');
 const testRoutes = require('./routes/tests');
 const leaderboardRoutes = require('./routes/leaderboard');
 const statsRoutes = require('./routes/stats');
+const paymentRoutes = require('./routes/payments');
 
 app.use('/api/users', userRoutes);
 app.use('/api/tests', testRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Главная страница API
 app.get('/', (req, res) => {
@@ -39,7 +41,8 @@ app.get('/', (req, res) => {
             users: '/api/users',
             tests: '/api/tests',
             leaderboard: '/api/leaderboard',
-            stats: '/api/stats'
+            stats: '/api/stats',
+            payments: '/api/payments'
         }
     });
 });
