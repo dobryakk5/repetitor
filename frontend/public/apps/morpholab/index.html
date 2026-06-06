@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 МорфоЛаб — выбор игры</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header-top {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title {
+            text-align: center;
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .header-subtitle {
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .back-btn {
+            justify-self: start;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .game-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+            border-color: #667eea;
+        }
+
+        .game-icon {
+            font-size: 52px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .game-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .game-description {
+            color: #6b7280;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .game-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .tag {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tag-blue { background: #dbeafe; color: #1d4ed8; }
+        .tag-green { background: #dcfce7; color: #15803d; }
+        .tag-orange { background: #ffedd5; color: #c2410c; }
+        .tag-purple { background: #ede9fe; color: #6d28d9; }
+
+        .start-btn {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .start-build { background: linear-gradient(135deg, #34d399, #10b981); }
+        .start-analysis { background: linear-gradient(135deg, #60a5fa, #6366f1); }
+        .start-spelling { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+        @media (max-width: 768px) {
+            .header-top {
+                grid-template-columns: 1fr;
+            }
+
+            .back-btn {
+                justify-self: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <button onclick="window.location.href='/training'" class="back-btn">← Назад к тестам</button>
+                <div class="header-title">
+                    <h1>🧪 МорфоЛаб</h1>
+                    <p class="header-subtitle">Выбери игру и начни тренировку морфем</p>
+                </div>
+                <div></div>
+            </div>
+        </div>
+
+        <div class="games-grid">
+            <div class="game-card" onclick="window.location.href='analysis.html'">
+                <div class="game-icon">🧪</div>
+                <div class="game-title">МорфоЛаб</div>
+                <div class="game-description">
+                    Разбор готовых слов: сначала блоками, затем по буквам.
+                </div>
+                <div class="game-tags">
+                    <span class="tag tag-blue">Уровень 1: блоки</span>
+                    <span class="tag tag-purple">Уровень 2: буквы</span>
+                </div>
+                <button class="start-btn start-analysis">Начать →</button>
+            </div>
+
+            <div class="game-card" onclick="window.location.href='build.html'">
+                <div class="game-icon">🧩</div>
+                <div class="game-title">Собери слово</div>
+                <div class="game-description">
+                    Перетаскивай морфемы как пазл и собирай правильные слова по смыслу.
+                </div>
+                <div class="game-tags">
+                    <span class="tag tag-green">Drag & Drop</span>
+                    <span class="tag tag-orange">2 уровня</span>
+                </div>
+                <button class="start-btn start-build">Начать →</button>
+            </div>
+
+            <div class="game-card" onclick="window.location.href='../morpho-spelling.html'">
+                <div class="game-icon">🎯</div>
+                <div class="game-title">МорфоОрфо</div>
+                <div class="game-description">
+                    Собери слово из морфем и примени орфографическое правило.
+                </div>
+                <div class="game-tags">
+                    <span class="tag tag-orange">Орфография</span>
+                    <span class="tag tag-purple">2 этапа</span>
+                </div>
+                <button class="start-btn start-spelling">Начать →</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: coachspace
+      POSTGRES_USER: coachspace
+      POSTGRES_PASSWORD: coachspace
+    ports:
+      - "5433:5432"
+    volumes:
+      - coachspace_pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://coachspace:coachspace@db:5432/coachspace
+      FRONTEND_URL: http://localhost:3100
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env before starting the backend}
+      ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      AUTH_COOKIE_SAMESITE: ${AUTH_COOKIE_SAMESITE:-lax}
+    ports:
+      - "8100:8100"
+    depends_on:
+      - db
+
+volumes:
+  coachspace_pgdata:

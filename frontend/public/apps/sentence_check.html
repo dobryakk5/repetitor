@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Разбор предложения</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <a href="index.html" class="home-btn">← Главная</a>
+    
+    <div class="main-container">
+        <h1>📝 Разбор предложения</h1>
+        
+        <div id="stats-section" class="stats-section" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value"><span id="stat-completed">0</span>/<span id="stat-total">0</span></div>
+                    <div class="stat-label">Варианты</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-accuracy">0%</div>
+                    <div class="stat-label">Прогресс</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layout">
+            <div class="sidebar">
+                <div class="sidebar-title">Варианты</div>
+                <div class="variant-grid" id="variant-grid"></div>
+            </div>
+
+            <div class="content-area">
+                <div class="variant-info" id="variant-info">Вариант 1 из 10</div>
+
+                <!-- Основные вкладки -->
+                <div class="main-tabs">
+                    <button class="main-tab active" onclick="switchMainTab('parts')">Части речи</button>
+                    <button class="main-tab" onclick="switchMainTab('templates')">Шаблоны</button>
+                    <button class="main-tab" onclick="switchMainTab('syntax')">Синтаксический разбор</button>
+                    <button class="main-tab" onclick="switchMainTab('morphology')">Морфологический разбор</button>
+                </div>
+
+                <!-- Вкладка "Части речи" -->
+                <div id="parts-tab" class="main-tab-content active">
+                    <div class="instruction">
+                        <strong>Инструкция:</strong> Кликните на слово в предложении и выберите его часть речи из списка ниже.
+                    </div>
+
+                    <div class="sentence-container">
+                        <div class="sentence" id="sentence"></div>
+                    </div>
+
+                    <div class="parts-analysis">
+                        <h3>Выберите часть речи:</h3>
+
+                        <div class="parts-group">
+                            <div class="group-title">1. Самостоятельные (знаменательные)</div>
+                            <div class="group-description">Они называют предметы, действия или признаки и являются членами предложения</div>
+
+                            <button class="part-btn" data-part="существительное">
+                                <span class="part-name">Имя существительное</span>
+                                <span class="part-comment">кто? что? — дом, радость</span>
+                            </button>
+
+                            <button class="part-btn" data-part="прилагательное">
+                                <span class="part-name">Имя прилагательное</span>
+                                <span class="part-comment">какой? чей? — синий, мамин</span>
+                            </button>
+
+                            <button class="part-btn" data-part="числительное">
+                                <span class="part-name">Имя числительное</span>
+                                <span class="part-comment">сколько? который? — пять, второй</span>
+                            </button>
+
+                            <button class="part-btn" data-part="местоимение">
+                                <span class="part-name">Местоимение</span>
+                                <span class="part-comment">указывает, но не называет — я, этот, каждый</span>
+                            </button>
+
+                            <button class="part-btn" data-part="глагол">
+                                <span class="part-name">Глагол</span>
+                                <span class="part-comment">что делать? — бежать, учиться</span>
+                            </button>
+
+                            <button class="part-btn" data-part="причастие">
+                                <span class="part-name">Причастие</span>
+                                <span class="part-comment">особая форма глагола — бегущий</span>
+                            </button>
+
+                            <button class="part-btn" data-part="деепричастие">
+                                <span class="part-name">Деепричастие</span>
+                                <span class="part-comment">особая форма глагола — пробежав</span>
+                            </button>
+
+                            <button class="part-btn" data-part="наречие">
+                                <span class="part-name">Наречие</span>
+                                <span class="part-comment">как? где? когда? — быстро, вчера</span>
+                            </button>
+                        </div>
+
+                        <div class="parts-group">
+                            <div class="group-title">2. Служебные</div>
+                            <div class="group-description">Не отвечают на вопросы и нужны для связи слов или передачи оттенков значения</div>
+
+                            <button class="part-btn" data-part="предлог">
+                                <span class="part-name">Предлог</span>
+                                <span class="part-comment">в, на, под</span>
+                            </button>
+
+                            <button class="part-btn" data-part="союз">
+                                <span class="part-name">Союз</span>
+                                <span class="part-comment">и, но, потому что</span>
+                            </button>
+
+                            <button class="part-btn" data-part="частица">
+                                <span class="part-name">Частица</span>
+                                <span class="part-comment">не, бы, неужели</span>
+                            </button>
+                        </div>
+
+                        <div class="parts-group">
+                            <div class="group-title">3. Особая группа</div>
+                            <div class="group-description">Выражает чувства, но не называет их</div>
+
+                            <button class="part-btn" data-part="междометие">
+                                <span class="part-name">Междометие</span>
+                                <span class="part-comment">ах!, ой!</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="result-message" id="result-message"></div>
+
+                    <div class="buttons">
+                        <button class="check-btn" id="check-btn" onclick="checkVariant()">Проверить</button>
+                        <button class="reset-btn" onclick="resetVariant()">Сбросить</button>
+                    </div>
+                </div>
+
+                <!-- Вкладка "Шаблоны" -->
+                <div id="templates-tab" class="main-tab-content">
+                    <div class="sentence-container">
+                        <div class="sentence" id="template-sentence"></div>
+                    </div>
+
+                    <div class="template-section">
+                        <h3>1. Выберите шаблон предложения</h3>
+                        <div class="template-options" id="template-options"></div>
+                    </div>
+
+                    <div class="template-section">
+                        <h3>2. Отметьте глагол в предложении и укажите его тип</h3>
+                        <div id="template-verb-sentence" class="sentence" style="margin-bottom: 20px; font-size: 20px;"></div>
+                        <div class="verb-types-grid" id="verb-type-options"></div>
+                    </div>
+
+                    <div class="result-message" id="template-result-message"></div>
+
+                    <div class="help-section">
+                        <h4>📚 Справка по шаблонам</h4>
+                        <div class="help-items">
+                            <div class="help-item"><strong>П</strong> - Подлежащее</div>
+                            <div class="help-item"><strong>Сн</strong> - Сказуемое, непереходный глагол</div>
+                            <div class="help-item"><strong>Сп</strong> - Сказуемое, переходный глагол</div>
+                            <div class="help-item"><strong>Ссв</strong> - Глагол-связка (СИС)</div>
+                            <div class="help-item"><strong>Свс</strong> - Вспомогательный глагол (СГС)</div>
+                            <div class="help-item"><strong>пД</strong> - Прямое дополнение</div>
+                            <div class="help-item"><strong>кД</strong> - Косвенное дополнение</div>
+                            <div class="help-item"><strong>ичСсущ</strong> - Именная часть сказуемого (существительное)</div>
+                            <div class="help-item"><strong>ичСприл</strong> - Именная часть сказуемого (прилагательное)</div>
+                            <div class="help-item"><strong>гчСинф</strong> - Глагольная часть сказуемого (инфинитив)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Вкладка "Синтаксический разбор" -->
+                <div id="syntax-tab" class="main-tab-content">
+                    <div class="instruction">
+                        <strong>Инструкция:</strong> Кликните на слово в предложении, чтобы определить его роль.
+                    </div>
+
+                    <div class="sentence-container">
+                        <div class="sentence" id="syntax-sentence"></div>
+                    </div>
+
+                    <div class="tabs-container" id="syntax-tabs-container"></div>
+                    <div id="syntax-panels"></div>
+
+                    <div class="result-message" id="syntax-result-message"></div>
+
+                    <div class="legend">
+                        <h3>Условные обозначения</h3>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <div class="legend-line подлежащее"></div>
+                                <span>Подлежащее</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-line сказуемое"></div>
+                                <span>Сказуемое</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-line дополнение"></div>
+                                <span>Дополнение</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-line legend-wave">ммм</span>
+                                <span>Определение</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-line обстоятельство"></div>
+                                <span>Обстоятельство</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Вкладка "Морфологический разбор" -->
+                <div id="morphology-tab" class="main-tab-content">
+                    <div class="instruction">
+                        <strong>Инструкция:</strong> Кликните на слово в предложении, чтобы выполнить морфологический разбор.
+                    </div>
+
+                    <div class="sentence-container">
+                        <div class="sentence" id="morph-sentence"></div>
+                    </div>
+
+                    <div class="tabs-container" id="tabs-container"></div>
+
+                    <div id="analysis-panels"></div>
+
+                    <div class="result-message" id="morph-result-message"></div>
+
+                    <div class="buttons">
+                        <button class="reset-btn" onclick="resetMorphology()">Сбросить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для ввода имени -->
+    <div id="name-modal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 Отличный результат!</h2>
+            <p id="modal-message"></p>
+            <input type="text" id="user-name-input" placeholder="Введите ваше имя" maxlength="50">
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closeNameModal()">Отмена</button>
+                <button class="save-btn" onclick="saveToLeaderboard()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключение файлов -->
+    <script src="config.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

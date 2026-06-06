@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔬 Фонетическая лаборатория</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Nunito:wght@400;600;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #FF6B9D;
+            --secondary: #FEC84E;
+            --accent: #4ECDC4;
+            --success: #95E1D3;
+            --bg: #FFF5E6;
+            --surface: #FFFFFF;
+            --text: #2D3561;
+            --shadow: rgba(45, 53, 97, 0.1);
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #FFF5E6 0%, #FFE5D9 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Background */
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .shape:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            animation-delay: 5s;
+        }
+        
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 10s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -30px) rotate(5deg); }
+            50% { transform: translate(-15px, -60px) rotate(-5deg); }
+            75% { transform: translate(30px, -30px) rotate(3deg); }
+        }
+        
+        /* Container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideDown 0.6s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            font-family: 'Comfortaa', cursive;
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text);
+            opacity: 0.8;
+        }
+        
+        /* Main Menu */
+        .main-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .menu-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 30px var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+        
+        .menu-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .menu-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .menu-title {
+            font-family: 'Comfortaa', cursive;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+        
+        .menu-desc {
+            font-size: 1rem;
+            opacity: 0.7;
+            line-height: 1.6;
+        }
+        
+        /* Screen Container */
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Back Button */
+        .back-btn {
+            background: var(--surface);
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .home-menu-link {
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+        }
+        
+        .back-btn:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+        
+        /* Alphabet Screen */
+        .alphabet-container {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .filter-btn {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 0.8rem 1.5rem;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary), #ff8fab);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .alphabet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .letter-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            border: 3px solid #e0e0e0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .letter-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .letter-card.vowel .letter-char {
+            color: #FF6B9D;
+        }
+        
+        .letter-card.consonant .letter-char {
+            color: #4ECDC4;
+        }
+        
+        .letter-card.special .letter-char {
+            color: #95E1D3;
+        }
+        
+        .letter-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 25px var(--shadow);
+            border-color: #d0d0d0;
+        }
+        
+        .letter-card.vowel:hover::before {
+            background: linear-gradient(135deg, #FF6B9D, #ff8fab);
+            opacity: 0.05;
+        }
+        
+        .letter-card.consonant:hover::before {
+            background: linear-gradient(135deg, #4ECDC4, #3db9af);
+            opacity: 0.05;
+        }
+        
+        .letter-card.special:hover::before {
+            background: linear-gradient(135deg, #95E1D3, #7dd4c4);
+            opacity: 0.05;
+        }
+        
+        .letter-card.hidden {
+            display: none;
+        }
+        
+        .letter-char {
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: 'Comfortaa', cursive;
+            position: relative;
+            z-index: 1;
+            display: block;
+            transition: color 0.3s ease;
+        }
+        
+        .letter-type {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.7;
+            position: relative;
+            z-index: 1;
+            display: none;
+        }
+        
+        .letter-detail {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            display: none;
+            animation: slideUp 0.4s ease;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+        
+        .letter-detail.show {
+            display: block;
+        }
+        
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+        }
+        
+        .detail-letter {
+            font-size: 5rem;
+            font-weight: 800;
+            font-family: 'Comfortaa', cursive;
+            color: var(--primary);
+        }
+        
+        .detail-info {
+            flex: 1;
+        }
+        
+        .detail-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .detail-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .detail-section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .detail-content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text);
+            opacity: 0.9;
+        }
+        
+        .examples {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.8rem;
+        }
+        
+        .example-word {
+            background: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .example-highlight {
+            color: var(--accent);
+            font-weight: 800;
+        }
+        
+        /* Learn Screen */
+        .learn-container {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+        
+        .word-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .word-btn {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 3px solid var(--accent);
+            border-radius: 20px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Nunito', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .word-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .word-btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+        
+        .word-btn:hover::before {
+            opacity: 0.05;
+        }
+        
+        .word-btn:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+        
+        .word-btn-emoji {
+            font-size: 3rem;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        .word-btn-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'Comfortaa', cursive;
+            color: var(--text);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .word-btn-hint {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            opacity: 0.8;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .input-section {
+            margin-bottom: 2rem;
+        }
+        
+        .word-input {
+            width: 100%;
+            padding: 1.5rem;
+            font-size: 2rem;
+            font-family: 'Comfortaa', cursive;
+            font-weight: 700;
+            border: 3px solid var(--accent);
+            border-radius: 16px;
+            text-align: center;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .word-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .analyze-btn {
+            width: 100%;
+            padding: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), #ff8fab);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            margin-top: 1rem;
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.4);
+        }
+        
+        /* Analysis Result */
+        .analysis-result {
+            margin-top: 2rem;
+        }
+        
+        .station {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid var(--accent);
+            box-shadow: 0 4px 15px var(--shadow);
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .station-title {
+            font-family: 'Comfortaa', cursive;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .syllables {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        
+        .syllable {
+            background: var(--accent);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(78, 205, 196, 0.3);
+        }
+        
+        .syllable.stressed {
+            background: var(--primary);
+            transform: scale(1.15);
+            box-shadow: 0 6px 15px rgba(255, 107, 157, 0.4);
+        }
+        
+        .transcription {
+            font-size: 2rem;
+            font-family: 'Courier New', monospace;
+            color: var(--text);
+            padding: 1.5rem;
+            background: rgba(78, 205, 196, 0.1);
+            border-radius: 12px;
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .sounds-table {
+            margin-top: 1rem;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+        
+        .sounds-table th {
+            background: var(--accent);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .sounds-table th:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+        
+        .sounds-table th:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .sounds-table td {
+            background: white;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .sounds-table tr td:first-child {
+            border-radius: 8px 0 0 8px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+        
+        .sounds-table tr td:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0.2rem;
+        }
+        
+        .badge.vowel {
+            background: rgba(255, 107, 157, 0.2);
+            color: var(--primary);
+        }
+        
+        .badge.consonant {
+            background: rgba(78, 205, 196, 0.2);
+            color: var(--accent);
+        }
+        
+        .badge.stressed {
+            background: rgba(254, 200, 78, 0.3);
+            color: #d39e00;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .comparison-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+        
+        .comparison-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        
+        .comparison-value {
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: 'Comfortaa', cursive;
+            color: var(--primary);
+        }
+        
+        .explanation {
+            background: rgba(149, 225, 211, 0.2);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        /* Game Screen */
+        .game-container {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+        
+        .level-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .level-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .level-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .level-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+        
+        .level-card:hover::before {
+            opacity: 0.05;
+        }
+        
+        .level-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .level-title {
+            font-family: 'Comfortaa', cursive;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        
+        .level-desc {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        /* Quiz */
+        .quiz {
+            display: none;
+        }
+        
+        .quiz.active {
+            display: block;
+        }
+        
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), #ff8fab);
+            border-radius: 16px;
+            color: white;
+        }
+        
+        .score {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 6px 20px var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+        
+        .target-word {
+            font-size: 3rem;
+            font-family: 'Comfortaa', cursive;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(78, 205, 196, 0.1));
+            border-radius: 16px;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .option {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 3px solid var(--accent);
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .option:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.2);
+        }
+        
+        .option.correct {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+            animation: pulse 0.5s ease;
+        }
+        
+        .option.incorrect {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            color: white;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .feedback {
+            background: rgba(149, 225, 211, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            display: none;
+        }
+        
+        .feedback.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .next-btn {
+            width: 100%;
+            padding: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #3db9af);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.3);
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .next-btn.show {
+            display: block;
+        }
+        
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+        }
+        
+        /* Results */
+        .results {
+            text-align: center;
+            padding: 3rem 0;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .results-icon {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+        }
+        
+        .results-title {
+            font-family: 'Comfortaa', cursive;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .results-score {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 2rem 0;
+        }
+        
+        .results-message {
+            font-size: 1.3rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+        
+        .restart-btn {
+            padding: 1.5rem 3rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), #ff8fab);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.4);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .main-menu {
+                grid-template-columns: 1fr;
+            }
+            
+            .word-input {
+                font-size: 1.5rem;
+            }
+            
+            .target-word {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-shapes">
+        <div class="shape" style="font-size: 8rem;">🔤</div>
+        <div class="shape" style="font-size: 6rem;">🎯</div>
+        <div class="shape" style="font-size: 7rem;">⭐</div>
+    </div>
+
+    <div class="container">
+        <a href="/training" class="back-btn home-menu-link">← В общее меню</a>
+        <header>
+            <h1>🔬 Фонетическая лаборатория</h1>
+            <p class="subtitle">Изучай звуки и буквы играючи!</p>
+        </header>
+
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen active">
+            <div class="main-menu">
+                <div class="menu-card" onclick="showScreen('alphabet')">
+                    <span class="menu-icon">🅰️</span>
+                    <h2 class="menu-title">Алфавит</h2>
+                    <p class="menu-desc">Изучи все буквы и узнай их свойства</p>
+                </div>
+                
+                <div class="menu-card" onclick="showScreen('learn')">
+                    <span class="menu-icon">📚</span>
+                    <h2 class="menu-title">Учиться</h2>
+                    <p class="menu-desc">Разбери слово на звуки и узнай, как оно устроено</p>
+                </div>
+                
+                <div class="menu-card" onclick="showScreen('game')">
+                    <span class="menu-icon">🎮</span>
+                    <h2 class="menu-title">Играть</h2>
+                    <p class="menu-desc">Проверь свои знания в весёлых заданиях</p>
+                </div>
+                
+                <div class="menu-card" onclick="alert('Скоро будет доступен личный прогресс! 🎯')">
+                    <span class="menu-icon">📊</span>
+                    <h2 class="menu-title">Мой прогресс</h2>
+                    <p class="menu-desc">Смотри свои достижения и слабые места</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alphabet Screen -->
+        <div id="alphabet-screen" class="screen">
+            <button class="back-btn" onclick="showScreen('main')">← Назад</button>
+            
+            <div class="alphabet-container">
+                <h2 class="station-title" style="text-align: center; margin-bottom: 1rem;">
+                    🅰️ Русский алфавит
+                </h2>
+                <p style="text-align: center; opacity: 0.8; margin-bottom: 2rem; font-size: 1.1rem;">
+                    Нажми на букву, чтобы узнать о ней больше!<br>
+                    <span style="color: #FF6B9D; font-weight: 700;">● Гласные</span> · 
+                    <span style="color: #4ECDC4; font-weight: 700;">● Согласные</span> · 
+                    <span style="color: #95E1D3; font-weight: 700;">● Особые</span>
+                </p>
+                
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterLetters('all')">
+                        Все буквы
+                    </button>
+                    <button class="filter-btn" onclick="filterLetters('vowels')">
+                        <span style="color: #FF6B9D;">●</span> Гласные
+                    </button>
+                    <button class="filter-btn" onclick="filterLetters('consonants')">
+                        <span style="color: #4ECDC4;">●</span> Согласные
+                    </button>
+                    <button class="filter-btn" onclick="filterLetters('special')">
+                        <span style="color: #95E1D3;">●</span> Особые
+                    </button>
+                </div>
+                
+                <div id="alphabet-grid" class="alphabet-grid"></div>
+                
+                <div id="letter-detail" class="letter-detail"></div>
+            </div>
+        </div>
+
+        <!-- Learn Screen -->
+        <div id="learn-screen" class="screen">
+            <button class="back-btn" onclick="showScreen('main')">← Назад</button>
+            
+            <div class="learn-container">
+                <h2 class="station-title" style="text-align: center; margin-bottom: 2rem;">
+                    🔍 Выбери слово для разбора
+                </h2>
+                
+                <div class="word-buttons">
+                    <button class="word-btn" onclick="analyzeWord('заяц')">
+                        <span class="word-btn-emoji">🐰</span>
+                        <span class="word-btn-text">заяц</span>
+                        <span class="word-btn-hint">я → 2 звука</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('ёжик')">
+                        <span class="word-btn-emoji">🦔</span>
+                        <span class="word-btn-text">ёжик</span>
+                        <span class="word-btn-hint">ё в начале</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('пень')">
+                        <span class="word-btn-emoji">🪵</span>
+                        <span class="word-btn-text">пень</span>
+                        <span class="word-btn-hint">ь не даёт звука</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('юла')">
+                        <span class="word-btn-emoji">🌀</span>
+                        <span class="word-btn-text">юла</span>
+                        <span class="word-btn-hint">ю в начале</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('маяк')">
+                        <span class="word-btn-emoji">🗼</span>
+                        <span class="word-btn-text">маяк</span>
+                        <span class="word-btn-hint">я после гласной</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('объём')">
+                        <span class="word-btn-emoji">📦</span>
+                        <span class="word-btn-text">объём</span>
+                        <span class="word-btn-hint">ъ + ё</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('чайка')">
+                        <span class="word-btn-emoji">🕊️</span>
+                        <span class="word-btn-text">чайка</span>
+                        <span class="word-btn-hint">ч всегда мягкая</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('школа')">
+                        <span class="word-btn-emoji">🏫</span>
+                        <span class="word-btn-text">школа</span>
+                        <span class="word-btn-hint">ш всегда твёрдая</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('семья')">
+                        <span class="word-btn-emoji">👨‍👩‍👧</span>
+                        <span class="word-btn-text">семья</span>
+                        <span class="word-btn-hint">ь + я</span>
+                    </button>
+                    
+                    <button class="word-btn" onclick="analyzeWord('енот')">
+                        <span class="word-btn-emoji">🦝</span>
+                        <span class="word-btn-text">енот</span>
+                        <span class="word-btn-hint">е в начале</span>
+                    </button>
+                </div>
+                
+                <div id="analysis-result" class="analysis-result"></div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <button class="back-btn" onclick="showScreen('main')">← Назад</button>
+            
+            <div class="game-container">
+                <div id="level-select">
+                    <h2 class="station-title">🎯 Выбери тему</h2>
+                    <div class="level-select">
+                        <div class="level-card" onclick="startQuiz('yotified')">
+                            <div class="level-icon">🅰️</div>
+                            <div class="level-title">Я, Ё, Ю, Е</div>
+                            <p class="level-desc">Когда эти буквы дают два звука?</p>
+                        </div>
+                        
+                        <div class="level-card" onclick="startQuiz('softness')">
+                            <div class="level-icon">💨</div>
+                            <div class="level-title">Мягкость</div>
+                            <p class="level-desc">Найди мягкие согласные</p>
+                        </div>
+                        
+                        <div class="level-card" onclick="startQuiz('count')">
+                            <div class="level-icon">🔢</div>
+                            <div class="level-title">Счёт звуков</div>
+                            <p class="level-desc">Посчитай буквы и звуки</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="quiz-container" class="quiz"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Phonetic Analysis Engine
+        const VOWELS = ['а', 'о', 'у', 'ы', 'э', 'и', 'е', 'ё', 'ю', 'я'];
+        const YOTIFIED = ['я', 'ё', 'ю', 'е'];
+        const CONSONANTS = ['б', 'в', 'г', 'д', 'ж', 'з', 'й', 'к', 'л', 'м', 'н', 'п', 'р', 'с', 'т', 'ф', 'х', 'ц', 'ч', 'ш', 'щ'];
+        const VOICED = ['б', 'в', 'г', 'д', 'ж', 'з', 'й', 'л', 'м', 'н', 'р'];
+        const VOICELESS = ['п', 'ф', 'к', 'т', 'ш', 'с', 'х', 'ц', 'ч', 'щ'];
+        const ALWAYS_SOFT = ['ч', 'щ', 'й'];
+        const ALWAYS_HARD = ['ж', 'ш', 'ц'];
+        
+        const VOICED_PAIRS = {
+            'б': 'п', 'в': 'ф', 'г': 'к', 'д': 'т', 'ж': 'ш', 'з': 'с',
+            'п': 'б', 'ф': 'в', 'к': 'г', 'т': 'д', 'ш': 'ж', 'с': 'з'
+        };
+        
+        function showScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            
+            if (screen === 'main') {
+                document.getElementById('main-menu').classList.add('active');
+            } else if (screen === 'alphabet') {
+                document.getElementById('alphabet-screen').classList.add('active');
+                initAlphabet();
+            } else if (screen === 'learn') {
+                document.getElementById('learn-screen').classList.add('active');
+                document.getElementById('analysis-result').innerHTML = '';
+            } else if (screen === 'game') {
+                document.getElementById('game-screen').classList.add('active');
+                document.getElementById('level-select').style.display = 'block';
+                document.getElementById('quiz-container').innerHTML = '';
+                document.getElementById('quiz-container').classList.remove('active');
+            }
+        }
+        
+        function splitIntoSyllables(word) {
+            const syllables = [];
+            let current = '';
+            
+            for (let i = 0; i < word.length; i++) {
+                current += word[i];
+                if (VOWELS.includes(word[i].toLowerCase())) {
+                    syllables.push(current);
+                    current = '';
+                }
+            }
+            
+            if (current) {
+                if (syllables.length > 0) {
+                    syllables[syllables.length - 1] += current;
+                } else {
+                    syllables.push(current);
+                }
+            }
+            
+            return syllables;
+        }
+        
+        function findStress(word) {
+            const vowelIndices = [];
+            for (let i = 0; i < word.length; i++) {
+                if (VOWELS.includes(word[i].toLowerCase())) {
+                    vowelIndices.push(i);
+                }
+            }
+            
+            if (vowelIndices.length === 1) return vowelIndices[0];
+            
+            // For demo, stress is on the first vowel by default
+            return vowelIndices[0];
+        }
+        
+        function transcribe(word, stressIndex) {
+            const sounds = [];
+            const letters = word.toLowerCase().split('');
+            
+            for (let i = 0; i < letters.length; i++) {
+                const letter = letters[i];
+                const prevLetter = i > 0 ? letters[i - 1] : null;
+                const nextLetter = i < letters.length - 1 ? letters[i + 1] : null;
+                
+                // Ь и Ъ не дают звука
+                if (letter === 'ь' || letter === 'ъ') {
+                    continue;
+                }
+                
+                // Йотированные гласные
+                if (YOTIFIED.includes(letter)) {
+                    const givesTwo = 
+                        i === 0 || 
+                        VOWELS.includes(prevLetter) || 
+                        prevLetter === 'ь' || 
+                        prevLetter === 'ъ';
+                    
+                    if (givesTwo) {
+                        sounds.push('[й\']');
+                        switch(letter) {
+                            case 'я': sounds.push('[а]'); break;
+                            case 'ё': sounds.push('[о]'); break;
+                            case 'ю': sounds.push('[у]'); break;
+                            case 'е': sounds.push('[э]'); break;
+                        }
+                    } else {
+                        // После согласной смягчает её
+                        switch(letter) {
+                            case 'я': sounds.push('[а]'); break;
+                            case 'ё': sounds.push('[о]'); break;
+                            case 'ю': sounds.push('[у]'); break;
+                            case 'е': sounds.push('[э]'); break;
+                        }
+                    }
+                }
+                // Обычные гласные
+                else if (VOWELS.includes(letter)) {
+                    sounds.push(`[${letter}]`);
+                }
+                // Согласные
+                else if (CONSONANTS.includes(letter)) {
+                    let sound = letter;
+                    let isSoft = false;
+                    
+                    // Проверяем мягкость
+                    if (ALWAYS_SOFT.includes(letter)) {
+                        isSoft = true;
+                    } else if (!ALWAYS_HARD.includes(letter)) {
+                        if (nextLetter === 'ь' || 
+                            (nextLetter && YOTIFIED.includes(nextLetter)) ||
+                            nextLetter === 'и') {
+                            isSoft = true;
+                        }
+                    }
+                    
+                    sounds.push(`[${sound}${isSoft ? '\'' : ''}]`);
+                }
+            }
+            
+            return sounds.join('');
+        }
+        
+        function analyzeSound(letter, index, word, stressIndex) {
+            const analysis = {
+                letter: letter,
+                sound: '',
+                type: '',
+                properties: []
+            };
+            
+            const lower = letter.toLowerCase();
+            const nextLetter = index < word.length - 1 ? word[index + 1].toLowerCase() : null;
+            const prevLetter = index > 0 ? word[index - 1].toLowerCase() : null;
+            
+            // Ь и Ъ
+            if (lower === 'ь' || lower === 'ъ') {
+                analysis.type = 'Не даёт звука';
+                analysis.properties.push('разделительный знак');
+                return analysis;
+            }
+            
+            // Йотированные
+            if (YOTIFIED.includes(lower)) {
+                const givesTwo = 
+                    index === 0 || 
+                    (prevLetter && VOWELS.includes(prevLetter)) || 
+                    prevLetter === 'ь' || 
+                    prevLetter === 'ъ';
+                
+                analysis.type = 'Гласный';
+                
+                if (givesTwo) {
+                    analysis.sound = `[й'] + [${{'я':'а','ё':'о','ю':'у','е':'э'}[lower]}]`;
+                    analysis.properties.push('даёт 2 звука');
+                } else {
+                    analysis.sound = `[${{'я':'а','ё':'о','ю':'у','е':'э'}[lower]}]`;
+                    analysis.properties.push('смягчает согласную');
+                }
+                
+                if (index === stressIndex) {
+                    analysis.properties.push('ударный');
+                } else {
+                    analysis.properties.push('безударный');
+                }
+            }
+            // Обычные гласные
+            else if (VOWELS.includes(lower)) {
+                analysis.type = 'Гласный';
+                analysis.sound = `[${lower}]`;
+                
+                if (index === stressIndex) {
+                    analysis.properties.push('ударный');
+                } else {
+                    analysis.properties.push('безударный');
+                }
+            }
+            // Согласные
+            else if (CONSONANTS.includes(lower)) {
+                analysis.type = 'Согласный';
+                
+                let isSoft = false;
+                if (ALWAYS_SOFT.includes(lower)) {
+                    isSoft = true;
+                } else if (!ALWAYS_HARD.includes(lower)) {
+                    if (nextLetter === 'ь' || 
+                        (nextLetter && YOTIFIED.includes(nextLetter)) ||
+                        nextLetter === 'и') {
+                        isSoft = true;
+                    }
+                }
+                
+                analysis.sound = `[${lower}${isSoft ? '\'' : ''}]`;
+                
+                // Звонкость/глухость
+                if (VOICED.includes(lower)) {
+                    analysis.properties.push('звонкий');
+                    if (VOICED_PAIRS[lower]) {
+                        analysis.properties.push('парный');
+                    } else {
+                        analysis.properties.push('непарный');
+                    }
+                } else if (VOICELESS.includes(lower)) {
+                    analysis.properties.push('глухой');
+                    if (VOICED_PAIRS[lower]) {
+                        analysis.properties.push('парный');
+                    } else {
+                        analysis.properties.push('непарный');
+                    }
+                }
+                
+                // Твёрдость/мягкость
+                if (ALWAYS_SOFT.includes(lower)) {
+                    analysis.properties.push('мягкий');
+                    analysis.properties.push('непарный');
+                } else if (ALWAYS_HARD.includes(lower)) {
+                    analysis.properties.push('твёрдый');
+                    analysis.properties.push('непарный');
+                } else {
+                    if (isSoft) {
+                        analysis.properties.push('мягкий');
+                    } else {
+                        analysis.properties.push('твёрдый');
+                    }
+                    analysis.properties.push('парный');
+                }
+            }
+            
+            return analysis;
+        }
+        
+        function countSounds(word) {
+            let count = 0;
+            const letters = word.toLowerCase().split('');
+            
+            for (let i = 0; i < letters.length; i++) {
+                const letter = letters[i];
+                const prevLetter = i > 0 ? letters[i - 1] : null;
+                
+                if (letter === 'ь' || letter === 'ъ') {
+                    continue;
+                }
+                
+                if (YOTIFIED.includes(letter)) {
+                    const givesTwo = 
+                        i === 0 || 
+                        VOWELS.includes(prevLetter) || 
+                        prevLetter === 'ь' || 
+                        prevLetter === 'ъ';
+                    
+                    count += givesTwo ? 2 : 1;
+                } else {
+                    count += 1;
+                }
+            }
+            
+            return count;
+        }
+        
+        // Alphabet Data
+        const ALPHABET_DATA = {
+            'А': { type: 'vowel', name: 'А', sound: '[а]', description: 'Гласная буква. Всегда обозначает звук [а].', examples: ['Арбуз', 'мАма', 'рукА'] },
+            'Б': { type: 'consonant', name: 'Бэ', sound: '[б]/[б\']', description: 'Согласная буква. Звонкая, парная (пара: П). Может быть твёрдой [б] или мягкой [б\'].', examples: ['Банан', 'риБа', 'хлеБ'] },
+            'В': { type: 'consonant', name: 'Вэ', sound: '[в]/[в\']', description: 'Согласная буква. Звонкая, парная (пара: Ф). Может быть твёрдой [в] или мягкой [в\'].', examples: ['Волк', 'корОва', 'морковЬ'] },
+            'Г': { type: 'consonant', name: 'Гэ', sound: '[г]/[г\']', description: 'Согласная буква. Звонкая, парная (пара: К). Может быть твёрдой [г] или мягкой [г\'].', examples: ['Гусь', 'ноГа', 'снеГ'] },
+            'Д': { type: 'consonant', name: 'Дэ', sound: '[д]/[д\']', description: 'Согласная буква. Звонкая, парная (пара: Т). Может быть твёрдой [д] или мягкой [д\'].', examples: ['Дом', 'воДа', 'саД'] },
+            'Е': { type: 'vowel', name: 'Е', sound: '[й\'э]/[э]', description: 'Гласная буква. В начале слова, после гласной или Ь/Ъ даёт ДВА звука [й\'э]. После согласной даёт [э] и смягчает согласную.', examples: ['Ель', 'поЕзд', 'моЕ'] },
+            'Ё': { type: 'vowel', name: 'Ё', sound: '[й\'о]/[о]', description: 'Гласная буква. В начале слова, после гласной или Ь/Ъ даёт ДВА звука [й\'о]. После согласной даёт [о] и смягчает согласную.', examples: ['Ёжик', 'поЁт', 'моЁ'] },
+            'Ж': { type: 'consonant', name: 'Жэ', sound: '[ж]', description: 'Согласная буква. Звонкая, парная (пара: Ш). ВСЕГДА твёрдая, непарная по твёрдости.', examples: ['Жук', 'Жираф', 'ёЖ'] },
+            'З': { type: 'consonant', name: 'Зэ', sound: '[з]/[з\']', description: 'Согласная буква. Звонкая, парная (пара: С). Может быть твёрдой [з] или мягкой [з\'].', examples: ['Заяц', 'коЗа', 'груЗ'] },
+            'И': { type: 'vowel', name: 'И', sound: '[и]', description: 'Гласная буква. Всегда обозначает звук [и]. Смягчает предыдущую согласную.', examples: ['Игла', 'кИт', 'пИла'] },
+            'Й': { type: 'consonant', name: 'И краткое', sound: '[й\']', description: 'Согласная буква. Звонкая, непарная. ВСЕГДА мягкая, непарная по твёрдости.', examples: ['Йод', 'маЙка', 'мой'] },
+            'К': { type: 'consonant', name: 'Ка', sound: '[к]/[к\']', description: 'Согласная буква. Глухая, парная (пара: Г). Может быть твёрдой [к] или мягкой [к\'].', examples: ['Кот', 'руКа', 'волК'] },
+            'Л': { type: 'consonant', name: 'Эль', sound: '[л]/[л\']', description: 'Согласная буква. Звонкая, непарная. Может быть твёрдой [л] или мягкой [л\'].', examples: ['Лиса', 'шкоЛа', 'стоЛ'] },
+            'М': { type: 'consonant', name: 'Эм', sound: '[м]/[м\']', description: 'Согласная буква. Звонкая, непарная. Может быть твёрдой [м] или мягкой [м\'].', examples: ['Мама', 'доМ', 'зиМа'] },
+            'Н': { type: 'consonant', name: 'Эн', sound: '[н]/[н\']', description: 'Согласная буква. Звонкая, непарная. Может быть твёрдой [н] или мягкой [н\'].', examples: ['Нос', 'луНа', 'слоН'] },
+            'О': { type: 'vowel', name: 'О', sound: '[о]', description: 'Гласная буква. Обозначает звук [о].', examples: ['Окно', 'кОт', 'молОко'] },
+            'П': { type: 'consonant', name: 'Пэ', sound: '[п]/[п\']', description: 'Согласная буква. Глухая, парная (пара: Б). Может быть твёрдой [п] или мягкой [п\'].', examples: ['Папа', 'лаПа', 'суП'] },
+            'Р': { type: 'consonant', name: 'Эр', sound: '[р]/[р\']', description: 'Согласная буква. Звонкая, непарная. Может быть твёрдой [р] или мягкой [р\'].', examples: ['Рыба', 'гоРа', 'двоР'] },
+            'С': { type: 'consonant', name: 'Эс', sound: '[с]/[с\']', description: 'Согласная буква. Глухая, парная (пара: З). Может быть твёрдой [с] или мягкой [с\'].', examples: ['Слон', 'леС', 'коСа'] },
+            'Т': { type: 'consonant', name: 'Тэ', sound: '[т]/[т\']', description: 'Согласная буква. Глухая, парная (пара: Д). Может быть твёрдой [т] или мягкой [т\'].', examples: ['Тигр', 'коТ', 'моСт'] },
+            'У': { type: 'vowel', name: 'У', sound: '[у]', description: 'Гласная буква. Всегда обозначает звук [у].', examples: ['Утка', 'рУка', 'кенгУру'] },
+            'Ф': { type: 'consonant', name: 'Эф', sound: '[ф]/[ф\']', description: 'Согласная буква. Глухая, парная (пара: В). Может быть твёрдой [ф] или мягкой [ф\'].', examples: ['Фонарь', 'каФе', 'шарФ'] },
+            'Х': { type: 'consonant', name: 'Ха', sound: '[х]/[х\']', description: 'Согласная буква. Глухая, непарная. Может быть твёрдой [х] или мягкой [х\'].', examples: ['Хлеб', 'мУха', 'петуХ'] },
+            'Ц': { type: 'consonant', name: 'Цэ', sound: '[ц]', description: 'Согласная буква. Глухая, непарная. ВСЕГДА твёрдая, непарная по твёрдости.', examples: ['Цапля', 'Цирк', 'огуреЦ'] },
+            'Ч': { type: 'consonant', name: 'Че', sound: '[ч\']', description: 'Согласная буква. Глухая, непарная. ВСЕГДА мягкая, непарная по твёрдости.', examples: ['Чайка', 'Часы', 'мяЧ'] },
+            'Ш': { type: 'consonant', name: 'Ша', sound: '[ш]', description: 'Согласная буква. Глухая, парная (пара: Ж). ВСЕГДА твёрдая, непарная по твёрдости.', examples: ['Школа', 'Шар', 'мыШь'] },
+            'Щ': { type: 'consonant', name: 'Ща', sound: '[щ\']', description: 'Согласная буква. Глухая, непарная. ВСЕГДА мягкая, непарная по твёрдости.', examples: ['Щука', 'Щётка', 'плаЩ'] },
+            'Ъ': { type: 'special', name: 'Твёрдый знак', sound: '—', description: 'Особый знак. НЕ обозначает звука! Разделяет согласную и гласную (Е, Ё, Ю, Я), показывая, что гласная даёт два звука.', examples: ['подЪезд', 'обЪявление', 'сЪел'] },
+            'Ы': { type: 'vowel', name: 'Ы', sound: '[ы]', description: 'Гласная буква. Всегда обозначает звук [ы]. Никогда не стоит в начале слова!', examples: ['сЫр', 'мЫло', 'рЫба'] },
+            'Ь': { type: 'special', name: 'Мягкий знак', sound: '—', description: 'Особый знак. НЕ обозначает звука! Смягчает предыдущую согласную или разделяет согласную и гласную (Е, Ё, Ю, Я).', examples: ['конЬ', 'деньги', 'семЬя'] },
+            'Э': { type: 'vowel', name: 'Э', sound: '[э]', description: 'Гласная буква. Всегда обозначает звук [э].', examples: ['Экран', 'Эхо', 'поЭт'] },
+            'Ю': { type: 'vowel', name: 'Ю', sound: '[й\'у]/[у]', description: 'Гласная буква. В начале слова, после гласной или Ь/Ъ даёт ДВА звука [й\'у]. После согласной даёт [у] и смягчает согласную.', examples: ['Юла', 'поЮ', 'моЮ'] },
+            'Я': { type: 'vowel', name: 'Я', sound: '[й\'а]/[а]', description: 'Гласная буква. В начале слова, после гласной или Ь/Ъ даёт ДВА звука [й\'а]. После согласной даёт [а] и смягчает согласную.', examples: ['Яблоко', 'маЯк', 'моЯ'] }
+        };
+        
+        function initAlphabet() {
+            const grid = document.getElementById('alphabet-grid');
+            grid.innerHTML = '';
+            
+            Object.keys(ALPHABET_DATA).forEach(letter => {
+                const data = ALPHABET_DATA[letter];
+                const card = document.createElement('div');
+                card.className = `letter-card ${data.type}`;
+                card.setAttribute('data-type', data.type);
+                card.onclick = () => showLetterDetail(letter);
+                
+                card.innerHTML = `
+                    <span class="letter-char">${letter}</span>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        function filterLetters(type) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter cards
+            const cards = document.querySelectorAll('.letter-card');
+            cards.forEach(card => {
+                if (type === 'all') {
+                    card.classList.remove('hidden');
+                } else {
+                    if (card.getAttribute('data-type') === type || 
+                        (type === 'vowels' && card.getAttribute('data-type') === 'vowel') ||
+                        (type === 'consonants' && card.getAttribute('data-type') === 'consonant') ||
+                        (type === 'special' && card.getAttribute('data-type') === 'special')) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                }
+            });
+            
+            // Hide detail when filtering
+            document.getElementById('letter-detail').classList.remove('show');
+        }
+        
+        function showLetterDetail(letter) {
+            const data = ALPHABET_DATA[letter];
+            const detail = document.getElementById('letter-detail');
+            
+            const typeInfo = {
+                'vowel': { label: 'Гласная', color: '#FF6B9D' },
+                'consonant': { label: 'Согласная', color: '#4ECDC4' },
+                'special': { label: 'Особый знак', color: '#95E1D3' }
+            };
+            
+            const info = typeInfo[data.type];
+            
+            let html = `
+                <div class="detail-header">
+                    <div class="detail-letter" style="color: ${info.color}">${letter}</div>
+                    <div class="detail-info">
+                        <div class="detail-name">${data.name}</div>
+                        <div class="detail-badges">
+                            <span class="badge ${data.type}">${info.label}</span>
+            `;
+            
+            if (data.sound !== '—') {
+                html += `<span class="badge ${data.type}">Звук: ${data.sound}</span>`;
+            }
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title">📖 Описание</div>
+                    <div class="detail-content">${data.description}</div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title">💡 Примеры слов</div>
+                    <div class="examples">
+            `;
+            
+            data.examples.forEach(example => {
+                const highlighted = example.replace(new RegExp(letter, 'gi'), 
+                    `<span class="example-highlight">${letter}</span>`);
+                html += `<div class="example-word">${highlighted}</div>`;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            detail.innerHTML = html;
+            detail.classList.add('show');
+            
+            // Scroll to detail
+            setTimeout(() => {
+                detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+        
+        function analyzeWord(inputWord) {
+            const word = inputWord || document.getElementById('word-input')?.value.trim();
+            
+            if (!word) {
+                alert('Введи слово!');
+                return;
+            }
+            
+            const syllables = splitIntoSyllables(word);
+            const stressIndex = findStress(word);
+            const transcription = transcribe(word, stressIndex);
+            const letterCount = word.length;
+            const soundCount = countSounds(word);
+            
+            let html = '';
+            
+            // Станция 1: Слоги
+            html += `
+                <div class="station">
+                    <div class="station-title">🎯 Станция 1: Слоги</div>
+                    <div class="syllables">
+            `;
+            
+            syllables.forEach((syll, i) => {
+                const hasStress = syll.toLowerCase().split('').some((char, idx) => {
+                    const globalIdx = word.toLowerCase().indexOf(syll.toLowerCase()) + idx;
+                    return globalIdx === stressIndex && VOWELS.includes(char);
+                });
+                
+                html += `<div class="syllable ${hasStress ? 'stressed' : ''}">${syll}</div>`;
+            });
+            
+            html += `
+                    </div>
+                    <p style="margin-top: 1rem; opacity: 0.8;">Количество слогов: <strong>${syllables.length}</strong></p>
+                </div>
+            `;
+            
+            // Станция 2: Транскрипция
+            html += `
+                <div class="station">
+                    <div class="station-title">🔊 Станция 2: Транскрипция</div>
+                    <div class="transcription">${transcription}</div>
+                    <p style="margin-top: 1rem; opacity: 0.8;">Так слово звучит на самом деле</p>
+                </div>
+            `;
+            
+            // Станция 3: Паспорт звуков
+            html += `
+                <div class="station">
+                    <div class="station-title">📋 Станция 3: Паспорт звуков</div>
+                    <table class="sounds-table">
+                        <thead>
+                            <tr>
+                                <th>Буква</th>
+                                <th>Звук</th>
+                                <th>Тип</th>
+                                <th>Свойства</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            for (let i = 0; i < word.length; i++) {
+                const analysis = analyzeSound(word[i], i, word, stressIndex);
+                
+                if (analysis.type === 'Не даёт звука') continue;
+                
+                html += `
+                    <tr>
+                        <td>${analysis.letter}</td>
+                        <td>${analysis.sound}</td>
+                        <td><span class="badge ${analysis.type === 'Гласный' ? 'vowel' : 'consonant'}">${analysis.type}</span></td>
+                        <td>
+                `;
+                
+                analysis.properties.forEach(prop => {
+                    const badgeClass = prop === 'ударный' ? 'stressed' : 
+                                      analysis.type === 'Гласный' ? 'vowel' : 'consonant';
+                    html += `<span class="badge ${badgeClass}">${prop}</span>`;
+                });
+                
+                html += `
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            // Станция 4: Сравнение
+            html += `
+                <div class="station">
+                    <div class="station-title">⚖️ Станция 4: Буквы vs Звуки</div>
+                    <div class="comparison">
+                        <div class="comparison-box">
+                            <div class="comparison-label">Букв</div>
+                            <div class="comparison-value">${letterCount}</div>
+                        </div>
+                        <div class="comparison-box">
+                            <div class="comparison-label">Звуков</div>
+                            <div class="comparison-value">${soundCount}</div>
+                        </div>
+                    </div>
+            `;
+            
+            if (letterCount !== soundCount) {
+                const reasons = [];
+                
+                for (let i = 0; i < word.length; i++) {
+                    const letter = word[i].toLowerCase();
+                    const prevLetter = i > 0 ? word[i - 1].toLowerCase() : null;
+                    
+                    if (letter === 'ь' || letter === 'ъ') {
+                        reasons.push(`"${word[i]}" не даёт звука`);
+                    } else if (YOTIFIED.includes(letter)) {
+                        const givesTwo = 
+                            i === 0 || 
+                            (prevLetter && VOWELS.includes(prevLetter)) || 
+                            prevLetter === 'ь' || 
+                            prevLetter === 'ъ';
+                        
+                        if (givesTwo) {
+                            reasons.push(`"${word[i]}" = [й'] + [${{'я':'а','ё':'о','ю':'у','е':'э'}[letter]}] (2 звука)`);
+                        }
+                    }
+                }
+                
+                if (reasons.length > 0) {
+                    html += `
+                        <div class="explanation">
+                            <strong>Почему не совпадает:</strong><br>
+                            ${reasons.map(r => `• ${r}`).join('<br>')}
+                        </div>
+                    `;
+                }
+            } else {
+                html += `
+                    <div class="explanation">
+                        <strong>В этом слове количество букв и звуков совпадает! ✨</strong>
+                    </div>
+                `;
+            }
+            
+            html += `</div>`;
+            
+            document.getElementById('analysis-result').innerHTML = html;
+            
+            // Прокручиваем к результату
+            setTimeout(() => {
+                document.getElementById('analysis-result').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 100);
+        }
+        
+        // Game Logic
+        const QUIZ_DATA = {
+            yotified: [
+                {
+                    word: 'яблоко',
+                    question: 'Сколько звуков даёт буква "я" в начале слова "яблоко"?',
+                    options: ['1 звук', '2 звука', '3 звука', 'Не даёт звука'],
+                    correct: 1,
+                    explanation: 'В начале слова "я" даёт ДВА звука: [й\'] + [а]'
+                },
+                {
+                    word: 'маяк',
+                    question: 'Сколько звуков даёт буква "я" после гласной в слове "маяк"?',
+                    options: ['1 звук', '2 звука', 'Не даёт звука', '3 звука'],
+                    correct: 1,
+                    explanation: 'После гласной "я" даёт ДВА звука: [й\'] + [а]'
+                },
+                {
+                    word: 'мяч',
+                    question: 'Сколько звуков даёт буква "я" после согласной в слове "мяч"?',
+                    options: ['1 звук', '2 звука', 'Не даёт звука', '3 звука'],
+                    correct: 0,
+                    explanation: 'После согласной "я" даёт ОДИН звук [а] и смягчает согласную перед собой'
+                },
+                {
+                    word: 'ёжик',
+                    question: 'Сколько звуков даёт буква "ё" в начале слова "ёжик"?',
+                    options: ['1 звук', '2 звука', '3 звука', 'Не даёт звука'],
+                    correct: 1,
+                    explanation: 'В начале слова "ё" даёт ДВА звука: [й\'] + [о]'
+                },
+                {
+                    word: 'ель',
+                    question: 'Сколько звуков даёт буква "е" в начале слова "ель"?',
+                    options: ['1 звук', '2 звука', 'Не даёт звука', '3 звука'],
+                    correct: 1,
+                    explanation: 'В начале слова "е" даёт ДВА звука: [й\'] + [э]'
+                }
+            ],
+            softness: [
+                {
+                    word: 'кот',
+                    question: 'Какой звук в слове "кот"?',
+                    options: ['[к] - твёрдый', '[к\'] - мягкий', 'оба варианта', 'ни один'],
+                    correct: 0,
+                    explanation: 'Согласная "к" перед "о" звучит твёрдо: [к]'
+                },
+                {
+                    word: 'кит',
+                    question: 'Какой звук в слове "кит"?',
+                    options: ['[к] - твёрдый', '[к\'] - мягкий', 'оба варианта', 'ни один'],
+                    correct: 1,
+                    explanation: 'Согласная "к" перед "и" звучит мягко: [к\']'
+                },
+                {
+                    word: 'день',
+                    question: 'Какой звук даёт "н" в слове "день"?',
+                    options: ['[н] - твёрдый', '[н\'] - мягкий', 'не даёт звука', 'оба варианта'],
+                    correct: 1,
+                    explanation: 'Мягкий знак делает "н" мягким: [н\']'
+                },
+                {
+                    word: 'чай',
+                    question: 'Звук [ч\'] в слове "чай" какой?',
+                    options: ['всегда мягкий', 'всегда твёрдый', 'зависит от буквы', 'может быть любым'],
+                    correct: 0,
+                    explanation: 'Звук [ч\'] ВСЕГДА мягкий, непарный'
+                },
+                {
+                    word: 'мяч',
+                    question: 'Почему "м" мягкая в слове "мяч"?',
+                    options: ['после неё "я"', 'перед ней "ь"', 'это всегда мягкая', 'случайно'],
+                    correct: 0,
+                    explanation: 'Буква "я" после согласной смягчает её: [м\']'
+                }
+            ],
+            count: [
+                {
+                    word: 'конь',
+                    question: 'Сколько звуков в слове "конь"?',
+                    options: ['3 звука', '4 звука', '5 звуков', '2 звука'],
+                    correct: 0,
+                    explanation: 'Буквы: 4, Звуки: 3 (ь не даёт звука)'
+                },
+                {
+                    word: 'ёлка',
+                    question: 'Сколько звуков в слове "ёлка"?',
+                    options: ['4 звука', '5 звуков', '6 звуков', '3 звука'],
+                    correct: 1,
+                    explanation: 'Буквы: 4, Звуки: 5 (ё = [й\'о])'
+                },
+                {
+                    word: 'яма',
+                    question: 'Сколько звуков в слове "яма"?',
+                    options: ['3 звука', '4 звука', '2 звука', '5 звуков'],
+                    correct: 1,
+                    explanation: 'Буквы: 3, Звуки: 4 (я = [й\'а])'
+                },
+                {
+                    word: 'день',
+                    question: 'Сколько звуков в слове "день"?',
+                    options: ['3 звука', '4 звука', '2 звука', '5 звуков'],
+                    correct: 0,
+                    explanation: 'Буквы: 4, Звуки: 3 (ь не даёт звука)'
+                },
+                {
+                    word: 'съел',
+                    question: 'Сколько звуков в слове "съел"?',
+                    options: ['3 звука', '4 звука', '5 звуков', '2 звука'],
+                    correct: 1,
+                    explanation: 'Буквы: 4, Звуки: 4 (ъ не даёт звука, но е = [й\'э])'
+                }
+            ]
+        };
+        
+        let currentQuiz = null;
+        let currentQuestion = 0;
+        let score = 0;
+        
+        function startQuiz(level) {
+            currentQuiz = QUIZ_DATA[level];
+            currentQuestion = 0;
+            score = 0;
+            
+            document.getElementById('level-select').style.display = 'none';
+            document.getElementById('quiz-container').classList.add('active');
+            
+            showQuestion();
+        }
+        
+        function showQuestion() {
+            if (currentQuestion >= currentQuiz.length) {
+                showResults();
+                return;
+            }
+            
+            const q = currentQuiz[currentQuestion];
+            
+            let html = `
+                <div class="quiz-header">
+                    <div class="score">⭐ Счёт: ${score}/${currentQuiz.length}</div>
+                    <div>Вопрос ${currentQuestion + 1}/${currentQuiz.length}</div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-text">${q.question}</div>
+                    <div class="target-word">${q.word}</div>
+                    
+                    <div class="options">
+            `;
+            
+            q.options.forEach((option, i) => {
+                html += `<button class="option" onclick="checkAnswer(${i})">${option}</button>`;
+            });
+            
+            html += `
+                    </div>
+                    
+                    <div class="feedback" id="feedback"></div>
+                    <button class="next-btn" id="next-btn" onclick="nextQuestion()">Следующий вопрос →</button>
+                </div>
+            `;
+            
+            document.getElementById('quiz-container').innerHTML = html;
+        }
+        
+        function checkAnswer(selected) {
+            const q = currentQuiz[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            const nextBtn = document.getElementById('next-btn');
+            
+            options.forEach(opt => opt.style.pointerEvents = 'none');
+            
+            if (selected === q.correct) {
+                options[selected].classList.add('correct');
+                feedback.innerHTML = `<strong>✅ Правильно!</strong><br>${q.explanation}`;
+                score++;
+            } else {
+                options[selected].classList.add('incorrect');
+                options[q.correct].classList.add('correct');
+                feedback.innerHTML = `<strong>❌ Неправильно.</strong><br>${q.explanation}`;
+            }
+            
+            feedback.classList.add('show');
+            nextBtn.classList.add('show');
+        }
+        
+        function nextQuestion() {
+            currentQuestion++;
+            showQuestion();
+        }
+        
+        function showResults() {
+            const percentage = Math.round((score / currentQuiz.length) * 100);
+            let message = '';
+            let icon = '';
+            
+            if (percentage === 100) {
+                message = 'Идеально! Ты настоящий мастер! 🏆';
+                icon = '🎉';
+            } else if (percentage >= 80) {
+                message = 'Отлично! Так держать! 🌟';
+                icon = '⭐';
+            } else if (percentage >= 60) {
+                message = 'Хорошо! Ещё немного практики! 💪';
+                icon = '👍';
+            } else {
+                message = 'Попробуй ещё раз! Практика — путь к успеху! 🚀';
+                icon = '📚';
+            }
+            
+            const html = `
+                <div class="results show">
+                    <div class="results-icon">${icon}</div>
+                    <div class="results-title">${message}</div>
+                    <div class="results-score">${score} / ${currentQuiz.length}</div>
+                    <div class="results-message">Правильных ответов: ${percentage}%</div>
+                    <button class="restart-btn" onclick="showScreen('game')">🎮 Играть ещё</button>
+                </div>
+            `;
+            
+            document.getElementById('quiz-container').innerHTML = html;
+        }
+        
+        // Allow Enter key to analyze word
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reserved for future enhancements
+        });
+    </script>
+</body>
+</html>

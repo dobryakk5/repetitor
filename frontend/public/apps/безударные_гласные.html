@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Безударные гласные</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8; --card: #fffdf9; --accent: #c0570a;
+    --gold: #c07c1a; --green: #2a9d5c; --text: #2a2018;
+    --muted: #8a7a65; --border: #e0d8cc; --purple: #9a7a4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; padding: 28px 16px 48px;
+  }
+  .back-link {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 18px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .95rem;
+    font-weight: 700;
+    transition: color .15s;
+  }
+  .back-link:hover { color: var(--gold); }
+  h1 {
+    font-family: 'Playfair Display', serif; font-size: 2.6rem;
+    color: var(--gold); text-align: center; margin-bottom: 6px;
+  }
+  .site-subtitle { color: var(--muted); font-size: .95rem; text-align: center; margin-bottom: 28px; }
+
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: transparent; color: var(--muted); font-size: .8rem; cursor: pointer;
+    transition: all .15s; font-family: inherit; letter-spacing: .02em;
+  }
+  .filter-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .filter-btn.active { background: var(--gold); border-color: var(--gold); color: #fff; font-weight: 700; }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+
+  .game-area {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 28px 24px; width: 100%; max-width: 560px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.1);
+  }
+
+  .game-title {
+    font-family: 'Playfair Display', serif; font-size: 1.7rem;
+    color: var(--gold); margin-bottom: 4px;
+  }
+  .game-desc { color: var(--muted); font-size: .9rem; margin-bottom: 20px; line-height: 1.5; }
+
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width .4s ease; }
+
+  .word-num {
+    font-size: .78rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .12em; text-align: center; margin-bottom: 14px;
+  }
+
+  /* Word display */
+  .word-display {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 9vw, 4.2rem);
+    line-height: 1.1; margin-bottom: 8px;
+    min-height: 80px; display: flex; align-items: center; justify-content: center;
+  }
+  .word-part { color: var(--text); }
+  .word-blank {
+    display: inline-flex; align-items: flex-end; justify-content: center;
+    width: .65em; min-width: 28px;
+    border-bottom: 3px solid var(--gold); color: var(--gold);
+    margin: 0 2px; padding-bottom: 2px; transition: all .3s;
+  }
+  .word-blank.solved { color: var(--green); border-color: var(--green); }
+
+  .stress-hint {
+    text-align: center; color: var(--muted); font-size: .85rem;
+    font-style: italic; margin-bottom: 22px; min-height: 20px;
+  }
+
+  /* Choice buttons */
+  .choices { display: flex; gap: 14px; justify-content: center; margin-bottom: 20px; }
+  .choice-btn {
+    width: 76px; height: 76px; border-radius: 14px;
+    border: 2px solid rgba(192,124,26,.3);
+    background: rgba(192,124,26,.07);
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; color: var(--gold);
+    cursor: pointer; transition: all .15s;
+  }
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--gold); background: rgba(192,124,26,.14);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(192,124,26,.2);
+  }
+  .choice-btn.correct { border-color: var(--green); background: rgba(42,157,92,.12); color: var(--green); }
+  .choice-btn.wrong { border-color: var(--accent); background: rgba(214,58,85,.12); color: var(--accent); animation: shake .3s ease; }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* Check word box */
+  .check-word {
+    background: rgba(192,124,26,.06); border: 1px solid rgba(192,124,26,.2);
+    border-radius: 12px; padding: 12px 18px;
+    text-align: center; margin-bottom: 14px;
+    opacity: 0; transition: opacity .4s; min-height: 60px;
+  }
+  .check-word.visible { opacity: 1; }
+  .check-word .label {
+    font-size: .72rem; color: var(--muted);
+    letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .check-word .cword {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; color: var(--green);
+  }
+  .check-word .cword .stressed { color: var(--gold); font-weight: 700; }
+
+  .message { text-align: center; min-height: 24px; font-size: .95rem; font-weight: 700; margin-bottom: 12px; }
+  .message.ok { color: var(--gold); }
+  .message.err { color: var(--accent); }
+
+  .bottom-row {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border); padding-top: 16px; gap: 12px;
+  }
+  .stat { font-size: .85rem; color: var(--muted); text-align: center; }
+  .stat span { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--gold); display: block; }
+  .stat-errors span { color: var(--accent); }
+
+  .btn-gold {
+    background: var(--gold); color: #fff; border: none; border-radius: 12px;
+    padding: 12px 22px; font-family: 'Nunito', sans-serif; font-size: 1rem;
+    font-weight: 700; cursor: pointer; transition: transform .1s, background .15s;
+  }
+  .btn-gold:hover { background: #a86a10; transform: translateY(-1px); }
+
+  .congrats {
+    text-align: center; padding: 20px;
+    font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold);
+  }
+
+  .mode-tabs {
+    display: flex; gap: 0; margin-bottom: 20px;
+    border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden;
+    width: fit-content; align-self: center;
+  }
+  .mode-tab {
+    padding: 9px 24px; background: transparent; border: none;
+    font-family: 'Nunito', sans-serif; font-size: .9rem; font-weight: 600;
+    color: var(--muted); cursor: pointer; transition: all .15s;
+  }
+  .mode-tab:first-child { border-right: 1.5px solid var(--border); }
+  .mode-tab.active { background: var(--gold); color: #fff; }
+  .mode-tab:hover:not(.active) { color: var(--gold); background: rgba(192,124,26,.06); }
+
+  .vocab-full {
+    font-family: 'Playfair Display', serif; font-size: 1.9rem;
+    color: var(--green); letter-spacing: .04em;
+  }
+  .vocab-full .blank-filled {
+    color: var(--gold); font-weight: 900;
+    text-decoration: underline; text-decoration-color: rgba(192,124,26,.4);
+    text-underline-offset: 4px;
+  }
+</style>
+</head>
+<body>
+
+<a href="/training" class="back-link">← К списку приложений</a>
+<h1>Безударные гласные</h1>
+<p class="site-subtitle">Вставь пропущенную букву в нужное место</p>
+
+<!-- Mode tabs -->
+<div class="mode-tabs">
+  <button class="mode-tab active" id="tab-check" onclick="switchMode('check')">Проверяемые</button>
+  <button class="mode-tab" id="tab-vocab" onclick="switchMode('vocab')">Словарные</button>
+</div>
+
+<!-- Filters for проверяемые -->
+<div class="filters" id="filters-check">
+  <button class="filter-btn active" onclick="setFilter('all', this)">Все</button>
+  <button class="filter-btn" onclick="setFilter('ао', this)">А / О</button>
+  <button class="filter-btn" onclick="setFilter('еи', this)">Е / И</button>
+  <button class="filter-btn" onclick="setFilter('ея', this)">Е / Я</button>
+</div>
+
+<!-- Filters for словарные -->
+<div class="filters" id="filters-vocab" style="display:none;">
+  <button class="filter-btn active" onclick="setVocabFilter('all', this)">Все</button>
+  <button class="filter-btn" onclick="setVocabFilter('природа', this)">Природа</button>
+  <button class="filter-btn" onclick="setVocabFilter('люди', this)">Люди</button>
+  <button class="filter-btn" onclick="setVocabFilter('быт', this)">Быт и город</button>
+</div>
+
+<div class="game-area">
+  <div class="game-title">Выбери букву</div>
+  <div class="game-desc">Кликни на правильную букву — потом проверь себя по проверочному слову.</div>
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="word-num" id="wordNum"></div>
+  <div class="word-display" id="wordDisplay"></div>
+  <div class="stress-hint" id="stressHint"></div>
+  <div class="choices" id="choices"></div>
+  <div class="check-word" id="checkWord">
+    <div class="label">Проверочное слово</div>
+    <div class="cword" id="checkWordText"></div>
+  </div>
+  <div class="message" id="message"></div>
+  <div class="bottom-row">
+    <div class="stat"><span id="statScore">0</span>Угадано</div>
+    <div class="stat stat-errors"><span id="statErrors">0</span>Ошибок</div>
+  </div>
+</div>
+
+<!-- Словарные слова -->
+<div class="game-area" id="vocab-area" style="display:none;">
+  <div class="game-title">Словарные слова</div>
+  <div class="game-desc">Эти слова нельзя проверить — их нужно запомнить. Выбери букву, потом посмотри как пишется слово.</div>
+  <div class="progress-bar"><div class="progress-fill" id="v-progress"></div></div>
+  <div class="word-num" id="v-wordNum"></div>
+  <div class="word-display" id="v-wordDisplay"></div>
+  <div class="choices" id="v-choices"></div>
+  <div class="check-word" id="v-checkWord">
+    <div class="label">Запомни написание</div>
+    <div class="cword" id="v-checkWordText"></div>
+  </div>
+  <div class="message" id="v-message"></div>
+  <div class="bottom-row">
+    <div class="stat"><span id="v-statScore">0</span>Угадано</div>
+    <div class="stat stat-errors"><span id="v-statErrors">0</span>Ошибок</div>
+  </div>
+</div>
+
+<script>
+const WORDS = [
+  // А/О
+  { word: 'в_да',       answer: 'о', choices: ['а','о'], check: 'вОды',      stressed: 'О', cat: 'ао' },
+  { word: 'г_ра',       answer: 'о', choices: ['а','о'], check: 'гОры',      stressed: 'О', cat: 'ао' },
+  { word: 'тр_ва',      answer: 'а', choices: ['а','о'], check: 'трАвы',     stressed: 'А', cat: 'ао' },
+  { word: 'гл_за',      answer: 'а', choices: ['а','о'], check: 'глАз',      stressed: 'А', cat: 'ао' },
+  { word: 'ст_лы',      answer: 'о', choices: ['а','о'], check: 'стОл',      stressed: 'О', cat: 'ао' },
+  { word: 'д_ма',       answer: 'о', choices: ['а','о'], check: 'дОм',       stressed: 'О', cat: 'ао' },
+  { word: 'н_га',       answer: 'о', choices: ['а','о'], check: 'нОги',      stressed: 'О', cat: 'ао' },
+  { word: 'хв_ст',      answer: 'о', choices: ['а','о'], check: 'хвОст',     stressed: 'О', cat: 'ао' },
+  { word: 'гр_за',      answer: 'о', choices: ['а','о'], check: 'грОзы',     stressed: 'О', cat: 'ао' },
+  { word: 'с_ды',       answer: 'а', choices: ['а','о'], check: 'сАд',       stressed: 'А', cat: 'ао' },
+  { word: 'кр_ты',      answer: 'о', choices: ['а','о'], check: 'крОт',      stressed: 'О', cat: 'ао' },
+  { word: 'зв_нок',     answer: 'о', choices: ['а','о'], check: 'звОн',      stressed: 'О', cat: 'ао' },
+  { word: 'гр_чи',      answer: 'а', choices: ['а','о'], check: 'грАч',      stressed: 'А', cat: 'ао' },
+  { word: 'пл_ды',      answer: 'о', choices: ['а','о'], check: 'плОд',      stressed: 'О', cat: 'ао' },
+  { word: 'м_ря',       answer: 'о', choices: ['а','о'], check: 'мОре',      stressed: 'О', cat: 'ао' },
+  { word: 'гр_дина',    answer: 'а', choices: ['а','о'], check: 'грАд',      stressed: 'А', cat: 'ао' },
+  { word: 'к_за',       answer: 'о', choices: ['а','о'], check: 'кОзы',      stressed: 'О', cat: 'ао' },
+  { word: 'в_лна',      answer: 'о', choices: ['а','о'], check: 'вОлны',     stressed: 'О', cat: 'ао' },
+  { word: 'с_сна',      answer: 'о', choices: ['а','о'], check: 'сОсны',     stressed: 'О', cat: 'ао' },
+  { word: 'т_пор',      answer: 'о', choices: ['а','о'], check: 'тОпоры',    stressed: 'О', cat: 'ао' },
+  { word: 'р_га',       answer: 'о', choices: ['а','о'], check: 'рОги',      stressed: 'О', cat: 'ао' },
+  { word: 'б_рода',     answer: 'о', choices: ['а','о'], check: 'бОроды',    stressed: 'О', cat: 'ао' },
+  { word: 'з_бор',      answer: 'а', choices: ['а','о'], check: 'зАборы',    stressed: 'А', cat: 'ао' },
+  { word: 'др_зды',     answer: 'о', choices: ['а','о'], check: 'дрОзд',     stressed: 'О', cat: 'ао' },
+  { word: 'ст_рона',    answer: 'о', choices: ['а','о'], check: 'стОроны',   stressed: 'О', cat: 'ао' },
+  { word: 'к_лос',      answer: 'о', choices: ['а','о'], check: 'кОлосья',   stressed: 'О', cat: 'ао' },
+  { word: 'г_лодный',   answer: 'о', choices: ['а','о'], check: 'гОлод',     stressed: 'О', cat: 'ао' },
+  { word: 'кр_пива',    answer: 'а', choices: ['а','о'], check: 'крАпинка',  stressed: 'А', cat: 'ао' },
+  { word: 'п_годы',     answer: 'о', choices: ['а','о'], check: 'пОгода',    stressed: 'О', cat: 'ао' },
+  { word: 'х_лодный',   answer: 'о', choices: ['а','о'], check: 'хОлод',     stressed: 'О', cat: 'ао' },
+
+  // Е/И
+  { word: 'р_ка',       answer: 'е', choices: ['е','и'], check: 'рЕки',      stressed: 'Е', cat: 'еи' },
+  { word: 'л_са',       answer: 'е', choices: ['е','и'], check: 'лЕс',       stressed: 'Е', cat: 'еи' },
+  { word: 'зв_зда',     answer: 'е', choices: ['е','и'], check: 'звЁзды',    stressed: 'Ё', cat: 'еи' },
+  { word: 'п_сьмо',     answer: 'и', choices: ['е','и'], check: 'пИсьма',    stressed: 'И', cat: 'еи' },
+  { word: 'в_сна',      answer: 'е', choices: ['е','и'], check: 'вЕсны',     stressed: 'Е', cat: 'еи' },
+  { word: 'гн_здо',     answer: 'е', choices: ['е','и'], check: 'гнЁзда',    stressed: 'Ё', cat: 'еи' },
+  { word: 'м_дведь',    answer: 'е', choices: ['е','и'], check: 'мЕд',       stressed: 'Е', cat: 'еи' },
+  { word: 'т_мнота',    answer: 'е', choices: ['е','и'], check: 'тЁмный',    stressed: 'Ё', cat: 'еи' },
+  { word: 'ч_сло',      answer: 'и', choices: ['е','и'], check: 'чИсла',     stressed: 'И', cat: 'еи' },
+  { word: 'с_рёжки',    answer: 'е', choices: ['е','и'], check: 'сЕрьги',    stressed: 'Е', cat: 'еи' },
+  { word: 'д_ревья',    answer: 'е', choices: ['е','и'], check: 'дЕрево',    stressed: 'Е', cat: 'еи' },
+  { word: 'п_тух',      answer: 'е', choices: ['е','и'], check: 'пЕть',      stressed: 'Е', cat: 'еи' },
+  { word: 'с_ло',       answer: 'е', choices: ['е','и'], check: 'сЕла',      stressed: 'Е', cat: 'еи' },
+  { word: 'д_тишки',    answer: 'е', choices: ['е','и'], check: 'дЕти',      stressed: 'Е', cat: 'еи' },
+  { word: 'пч_ла',      answer: 'е', choices: ['е','и'], check: 'пчЁлка',    stressed: 'Ё', cat: 'еи' },
+  { word: 'гр_бы',      answer: 'и', choices: ['е','и'], check: 'грИб',      stressed: 'И', cat: 'еи' },
+  { word: 'ст_кло',     answer: 'е', choices: ['е','и'], check: 'стЕкла',    stressed: 'Е', cat: 'еи' },
+  { word: 'н_бо',       answer: 'е', choices: ['е','и'], check: 'нЕба',      stressed: 'Е', cat: 'еи' },
+  { word: 'з_мля',      answer: 'е', choices: ['е','и'], check: 'зЕмли',     stressed: 'Е', cat: 'еи' },
+  { word: 'в_сло',      answer: 'е', choices: ['е','и'], check: 'вЕсла',     stressed: 'Е', cat: 'еи' },
+  { word: 'кр_пость',   answer: 'е', choices: ['е','и'], check: 'крЕпкий',   stressed: 'Е', cat: 'еи' },
+  { word: 'б_жать',     answer: 'е', choices: ['е','и'], check: 'бЕгать',    stressed: 'Е', cat: 'еи' },
+  { word: 'с_деть',     answer: 'и', choices: ['е','и'], check: 'сИдя',      stressed: 'И', cat: 'еи' },
+  { word: 'н_сти',      answer: 'е', choices: ['е','и'], check: 'нЕс',       stressed: 'Е', cat: 'еи' },
+  { word: 'б_лить',     answer: 'е', choices: ['е','и'], check: 'бЕлый',     stressed: 'Е', cat: 'еи' },
+  { word: 'тр_петать',  answer: 'е', choices: ['е','и'], check: 'трЕпет',    stressed: 'Е', cat: 'еи' },
+  { word: 'св_стеть',   answer: 'и', choices: ['е','и'], check: 'свИст',     stressed: 'И', cat: 'еи' },
+  { word: 'сн_гирь',    answer: 'е', choices: ['е','и'], check: 'снЕг',      stressed: 'Е', cat: 'еи' },
+  { word: 'ч_репаха',   answer: 'е', choices: ['е','и'], check: 'чЕреп',     stressed: 'Е', cat: 'еи' },
+  { word: 'р_шение',    answer: 'е', choices: ['е','и'], check: 'рЕшит',     stressed: 'Е', cat: 'еи' },
+
+  // Е/Я
+  { word: 'м_чта',      answer: 'е', choices: ['е','я'], check: 'мЕчты',     stressed: 'Е', cat: 'ея' },
+  { word: 'р_ды',       answer: 'я', choices: ['е','я'], check: 'рЯд',       stressed: 'Я', cat: 'ея' },
+  { word: 'т_жёлый',    answer: 'я', choices: ['е','я'], check: 'тЯжесть',   stressed: 'Я', cat: 'ея' },
+  { word: 'п_тно',      answer: 'я', choices: ['е','я'], check: 'пЯть',      stressed: 'Я', cat: 'ея' },
+  { word: 'в_зать',     answer: 'я', choices: ['е','я'], check: 'вЯжет',     stressed: 'Я', cat: 'ея' },
+  { word: 'д_дина',     answer: 'я', choices: ['е','я'], check: 'дЯдя',      stressed: 'Я', cat: 'ея' },
+  { word: 'гл_деть',    answer: 'я', choices: ['е','я'], check: 'взглЯд',    stressed: 'Я', cat: 'ея' },
+  { word: 'п_тёрка',    answer: 'я', choices: ['е','я'], check: 'пЯть',      stressed: 'Я', cat: 'ея' },
+  { word: 'т_нуть',     answer: 'я', choices: ['е','я'], check: 'тЯга',      stressed: 'Я', cat: 'ея' },
+  { word: 'п_тница',    answer: 'я', choices: ['е','я'], check: 'пЯть',      stressed: 'Я', cat: 'ея' },
+  { word: 'с_мья',      answer: 'е', choices: ['е','я'], check: 'сЕмь',      stressed: 'Е', cat: 'ея' },
+  { word: 'н_ня',       answer: 'я', choices: ['е','я'], check: 'нЯнечка',   stressed: 'Я', cat: 'ея' },
+  { word: 'кл_нуться',  answer: 'е', choices: ['е','я'], check: 'пОклон',    stressed: 'О', cat: 'ея' },
+  { word: 'ч_стота',    answer: 'а', choices: ['а','о'], check: 'чАсто',     stressed: 'А', cat: 'ао' },
+];;
+
+let state = {
+  all: [], current: [], idx: 0,
+  score: 0, errors: 0, solved: false, filter: 'all'
+};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function setFilter(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.filter = cat;
+  start();
+}
+
+function start() {
+  const pool = state.filter === 'all' ? WORDS : WORDS.filter(w => w.cat === state.filter);
+  state.current = shuffle(pool);
+  state.idx = 0; state.score = 0; state.errors = 0;
+  document.getElementById('statScore').textContent = '0';
+  document.getElementById('statErrors').textContent = '0';
+  showWord();
+}
+
+function showWord() {
+  state.solved = false;
+  const w = state.current[state.idx];
+  const total = state.current.length;
+
+  document.getElementById('wordNum').textContent = `Слово ${state.idx+1} из ${total}`;
+  document.getElementById('progress').style.width = `${state.idx / total * 100}%`;
+  document.getElementById('message').textContent = '';
+  document.getElementById('message').className = 'message';
+
+  // Render word with blank
+  const parts = w.word.split('_');
+  const display = document.getElementById('wordDisplay');
+  display.innerHTML =
+    `<span class="word-part">${parts[0]}</span>` +
+    `<span class="word-blank" id="blank">_</span>` +
+    `<span class="word-part">${parts[1] || ''}</span>`;
+
+  // Stress hint
+  document.getElementById('stressHint').textContent =
+    `Проверь: найди форму, где гласная под ударением`;
+
+  // Check word hidden
+  const cw = document.getElementById('checkWord');
+  cw.classList.remove('visible');
+  document.getElementById('checkWordText').innerHTML = '';
+
+  // Render choice buttons
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  w.choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = ch;
+    btn.addEventListener('click', () => pick(ch, btn, w));
+    choicesEl.appendChild(btn);
+  });
+}
+
+function pick(ch, btn, w) {
+  if (state.solved) return;
+
+  if (ch !== w.answer) {
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 600);
+    state.errors++;
+    document.getElementById('statErrors').textContent = state.errors;
+    return;
+  }
+
+  state.solved = true;
+  state.score++;
+  document.getElementById('statScore').textContent = state.score;
+
+  // Fill blank
+  const blank = document.getElementById('blank');
+  blank.textContent = ch;
+  blank.classList.add('solved');
+
+  // Mark button correct
+  btn.classList.add('correct');
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+  // Show check word with stressed letter highlighted
+  const checkText = w.check.replace(w.stressed, `<span class="stressed">${w.stressed}</span>`);
+  document.getElementById('checkWordText').innerHTML = checkText;
+  document.getElementById('checkWord').classList.add('visible');
+
+  const msg = document.getElementById('message');
+  msg.textContent = `✓ Верно!`;
+  msg.className = 'message ok';
+
+  setTimeout(() => {
+    if (state.idx < state.current.length - 1) {
+      state.idx++;
+      showWord();
+    } else {
+      document.getElementById('wordDisplay').innerHTML =
+        `<div class="congrats">🎉 Готово!<br>
+        <span style="font-size:1rem;font-family:'Crimson Pro',serif;color:var(--muted)">
+        Правильно: ${state.score} из ${state.current.length}, ошибок: ${state.errors}
+        </span></div>`;
+      document.getElementById('choices').innerHTML =
+        `<button class="btn-restart" onclick="start()">Ещё раз</button>`;
+      document.getElementById('checkWord').classList.remove('visible');
+      document.getElementById('message').textContent = '';
+      document.getElementById('progress').style.width = '100%';
+    }
+  }, 1400);
+}
+
+// Init
+start();
+
+
+
+// ══════════════════════════════════════════
+//  VOCAB MODE — СЛОВАРНЫЕ СЛОВА
+// ══════════════════════════════════════════
+
+const VOCAB_WORDS = [
+  // природа
+  { word: 'б_рёза',     answer: 'е', choices: ['е','и'], full: 'берёза',    cat: 'природа' },
+  { word: 'к_лина',     answer: 'а', choices: ['а','о'], full: 'калина',    cat: 'природа' },
+  { word: 'м_лина',     answer: 'а', choices: ['а','о'], full: 'малина',    cat: 'природа' },
+  { word: 'р_бина',     answer: 'я', choices: ['е','я'], full: 'рябина',    cat: 'природа' },
+  { word: 'к_пуста',    answer: 'а', choices: ['а','о'], full: 'капуста',   cat: 'природа' },
+  { word: 'м_рковь',    answer: 'о', choices: ['а','о'], full: 'морковь',   cat: 'природа' },
+  { word: 'п_миндор',   answer: 'о', choices: ['а','о'], full: 'помидор',   cat: 'природа' },
+  { word: 'к_ртофель',  answer: 'а', choices: ['а','о'], full: 'картофель', cat: 'природа' },
+  { word: 'с_рока',     answer: 'о', choices: ['а','о'], full: 'сорока',    cat: 'природа' },
+  { word: 'в_рона',     answer: 'о', choices: ['а','о'], full: 'ворона',    cat: 'природа' },
+  { word: 'с_бака',     answer: 'о', choices: ['а','о'], full: 'собака',    cat: 'природа' },
+  { word: 'м_дведь',    answer: 'е', choices: ['е','и'], full: 'медведь',   cat: 'природа' },
+  { word: 'з_яц',       answer: 'а', choices: ['а','о'], full: 'заяц',      cat: 'природа' },
+  { word: 'л_сица',     answer: 'и', choices: ['е','и'], full: 'лисица',    cat: 'природа' },
+  { word: 'п_тух',      answer: 'е', choices: ['е','и'], full: 'петух',     cat: 'природа' },
+  // люди
+  { word: 'уч_ник',     answer: 'е', choices: ['е','и'], full: 'ученик',    cat: 'люди' },
+  { word: 'р_бята',     answer: 'е', choices: ['е','я'], full: 'ребята',    cat: 'люди' },
+  { word: 'уч_тель',    answer: 'и', choices: ['е','и'], full: 'учитель',   cat: 'люди' },
+  { word: 'д_журный',   answer: 'е', choices: ['е','и'], full: 'дежурный',  cat: 'люди' },
+  { word: 'кр_стьянин', answer: 'е', choices: ['е','и'], full: 'крестьянин',cat: 'люди' },
+  { word: 'р_бочий',    answer: 'а', choices: ['а','о'], full: 'рабочий',   cat: 'люди' },
+  { word: 'т_варищ',    answer: 'о', choices: ['а','о'], full: 'товарищ',   cat: 'люди' },
+  { word: 'ч_ловек',    answer: 'е', choices: ['е','и'], full: 'человек',   cat: 'люди' },
+  { word: 'р_дина',     answer: 'о', choices: ['а','о'], full: 'родина',    cat: 'люди' },
+  // быт
+  { word: 'к_рандаш',   answer: 'а', choices: ['а','о'], full: 'карандаш',  cat: 'быт' },
+  { word: 'т_традь',    answer: 'е', choices: ['е','и'], full: 'тетрадь',   cat: 'быт' },
+  { word: 'б_блиотека', answer: 'и', choices: ['е','и'], full: 'библиотека',cat: 'быт' },
+  { word: 'к_лендарь',  answer: 'а', choices: ['а','о'], full: 'календарь', cat: 'быт' },
+  { word: 'г_зета',     answer: 'а', choices: ['а','о'], full: 'газета',    cat: 'быт' },
+  { word: 'к_стюм',     answer: 'о', choices: ['а','о'], full: 'костюм',    cat: 'быт' },
+  { word: 'п_льто',     answer: 'а', choices: ['а','о'], full: 'пальто',    cat: 'быт' },
+  { word: 'в_кзал',     answer: 'о', choices: ['а','о'], full: 'вокзал',    cat: 'быт' },
+  { word: 'м_газин',    answer: 'а', choices: ['а','о'], full: 'магазин',   cat: 'быт' },
+  { word: 'т_лефон',    answer: 'е', choices: ['е','и'], full: 'телефон',   cat: 'быт' },
+  { word: 'ш_ссе',      answer: 'о', choices: ['а','о'], full: 'шоссе',     cat: 'быт' },
+  { word: 'к_мната',    answer: 'о', choices: ['а','о'], full: 'комната',   cat: 'быт' },
+  { word: 'кв_ртира',   answer: 'а', choices: ['а','о'], full: 'квартира',  cat: 'быт' },
+  { word: 'з_вод',      answer: 'а', choices: ['а','о'], full: 'завод',     cat: 'быт' },
+  { word: 'м_шина',     answer: 'а', choices: ['а','о'], full: 'машина',    cat: 'быт' },
+
+  // природа — ещё
+  { word: 'к_рова',     answer: 'о', choices: ['а','о'], full: 'корова',     cat: 'природа' },
+  { word: 'л_шадь',     answer: 'о', choices: ['а','о'], full: 'лошадь',     cat: 'природа' },
+  { word: 'св_нья',     answer: 'и', choices: ['е','и'], full: 'свинья',     cat: 'природа' },
+  { word: 'к_рица',     answer: 'у', choices: ['у','о'], full: 'курица',     cat: 'природа' },
+  { word: 'м_дуза',     answer: 'е', choices: ['е','и'], full: 'медуза',     cat: 'природа' },
+  { word: 'кр_кодил',   answer: 'о', choices: ['а','о'], full: 'крокодил',   cat: 'природа' },
+  { word: 'б_гемот',    answer: 'е', choices: ['е','и'], full: 'бегемот',    cat: 'природа' },
+  { word: 'п_пугай',    answer: 'о', choices: ['а','о'], full: 'попугай',    cat: 'природа' },
+  { word: 'ф_алка',     answer: 'и', choices: ['е','и'], full: 'фиалка',     cat: 'природа' },
+  { word: 'р_машка',    answer: 'о', choices: ['а','о'], full: 'ромашка',    cat: 'природа' },
+  { word: 'к_пейка',    answer: 'о', choices: ['а','о'], full: 'копейка',    cat: 'быт' },
+  { word: 'м_роз',      answer: 'о', choices: ['а','о'], full: 'мороз',      cat: 'природа' },
+  { word: 'п_года',     answer: 'о', choices: ['а','о'], full: 'погода',     cat: 'природа' },
+  { word: 'с_лома',     answer: 'о', choices: ['а','о'], full: 'солома',     cat: 'природа' },
+
+  // люди — ещё
+  { word: 'д_ректор',   answer: 'и', choices: ['е','и'], full: 'директор',   cat: 'люди' },
+  { word: 'к_питан',    answer: 'а', choices: ['а','о'], full: 'капитан',    cat: 'люди' },
+  { word: 'с_лдат',     answer: 'о', choices: ['а','о'], full: 'солдат',     cat: 'люди' },
+  { word: 'к_мандир',   answer: 'о', choices: ['а','о'], full: 'командир',   cat: 'люди' },
+  { word: 'ж_тель',     answer: 'и', choices: ['е','и'], full: 'житель',     cat: 'люди' },
+  { word: 'п_нер',      answer: 'и', choices: ['е','и'], full: 'пионер',     cat: 'люди' },
+  { word: 'к_ллектив',  answer: 'о', choices: ['а','о'], full: 'коллектив',  cat: 'люди' },
+  { word: 'г_рой',      answer: 'е', choices: ['е','и'], full: 'герой',      cat: 'люди' },
+  { word: 'ч_мпион',    answer: 'е', choices: ['е','и'], full: 'чемпион',    cat: 'люди' },
+
+  // быт — ещё
+  { word: 'б_лет',      answer: 'и', choices: ['е','и'], full: 'билет',      cat: 'быт' },
+  { word: 'к_льцо',     answer: 'о', choices: ['а','о'], full: 'кольцо',     cat: 'быт' },
+  { word: 'пл_ток',     answer: 'а', choices: ['а','о'], full: 'платок',     cat: 'быт' },
+  { word: 'с_пог',      answer: 'а', choices: ['а','о'], full: 'сапог',      cat: 'быт' },
+  { word: 'в_лейбол',   answer: 'о', choices: ['а','о'], full: 'волейбол',   cat: 'быт' },
+  { word: 'ф_тбол',     answer: 'у', choices: ['у','о'], full: 'футбол',     cat: 'быт' },
+  { word: 'р_кзак',     answer: 'ю', choices: ['ю','у'], full: 'рюкзак',     cat: 'быт' },
+  { word: 'к_стрюля',   answer: 'а', choices: ['а','о'], full: 'кастрюля',   cat: 'быт' },
+  { word: 'т_релка',    answer: 'а', choices: ['а','о'], full: 'тарелка',    cat: 'быт' },
+  { word: 'л_пата',     answer: 'о', choices: ['а','о'], full: 'лопата',     cat: 'быт' },
+  { word: 'к_лхоз',     answer: 'о', choices: ['а','о'], full: 'колхоз',     cat: 'быт' },
+  { word: 'ст_нция',    answer: 'а', choices: ['а','о'], full: 'станция',    cat: 'быт' },
+  { word: 'пр_грамма',  answer: 'о', choices: ['а','о'], full: 'программа',  cat: 'быт' },
+  { word: 'к_лония',    answer: 'о', choices: ['а','о'], full: 'колония',    cat: 'быт' },
+  { word: 'ш_нель',     answer: 'и', choices: ['е','и'], full: 'шинель',     cat: 'быт' },
+];
+
+let vState = { current: [], idx: 0, score: 0, errors: 0, solved: false, filter: 'all' };
+
+function setVocabFilter(cat, btn) {
+  document.querySelectorAll('#filters-vocab .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  vState.filter = cat;
+  vStart();
+}
+
+function vStart() {
+  const pool = vState.filter === 'all' ? VOCAB_WORDS : VOCAB_WORDS.filter(w => w.cat === vState.filter);
+  vState.current = shuffle(pool);
+  vState.idx = 0; vState.score = 0; vState.errors = 0;
+  document.getElementById('v-statScore').textContent = '0';
+  document.getElementById('v-statErrors').textContent = '0';
+  vShow();
+}
+
+function vShow() {
+  vState.solved = false;
+  const w = vState.current[vState.idx];
+  const total = vState.current.length;
+  document.getElementById('v-wordNum').textContent = `Слово ${vState.idx+1} из ${total}`;
+  document.getElementById('v-progress').style.width = `${vState.idx / total * 100}%`;
+  document.getElementById('v-message').textContent = '';
+  document.getElementById('v-message').className = 'message';
+
+  const parts = w.word.split('_');
+  document.getElementById('v-wordDisplay').innerHTML =
+    `<span class="word-part">${parts[0]}</span>` +
+    `<span class="word-blank" id="v-blank">_</span>` +
+    `<span class="word-part">${parts[1] || ''}</span>`;
+
+  const cw = document.getElementById('v-checkWord');
+  cw.classList.remove('visible');
+  document.getElementById('v-checkWordText').innerHTML = '';
+
+  const el = document.getElementById('v-choices');
+  el.innerHTML = '';
+  w.choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = ch;
+    btn.addEventListener('click', () => vPick(ch, btn, w));
+    el.appendChild(btn);
+  });
+}
+
+function vPick(ch, btn, w) {
+  if (vState.solved) return;
+  if (ch !== w.answer) {
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 600);
+    vState.errors++;
+    document.getElementById('v-statErrors').textContent = vState.errors;
+    return;
+  }
+  vState.solved = true; vState.score++;
+  document.getElementById('v-statScore').textContent = vState.score;
+  btn.classList.add('correct');
+  document.querySelectorAll('#v-choices .choice-btn').forEach(b => b.disabled = true);
+
+  // Show full word with the blank letter highlighted
+  const highlighted = w.full.replace(w.answer, `<span class="blank-filled">${w.answer}</span>`);
+  document.getElementById('v-checkWordText').innerHTML =
+    `<span class="vocab-full">${highlighted}</span>`;
+  document.getElementById('v-checkWord').classList.add('visible');
+
+  const msg = document.getElementById('v-message');
+  msg.textContent = '✓ Запомни!';
+  msg.className = 'message ok';
+
+  setTimeout(() => {
+    if (vState.idx < vState.current.length - 1) { vState.idx++; vShow(); }
+    else {
+      document.getElementById('v-wordDisplay').innerHTML =
+        `<div class="congrats" style="font-size:1.2rem;">🎉 Все слова пройдены!<br>
+        <span style="font-size:.9rem;font-family:Nunito,sans-serif;color:var(--muted)">
+        Правильно: ${vState.score} из ${vState.current.length}, ошибок: ${vState.errors}
+        </span></div>`;
+      document.getElementById('v-choices').innerHTML =
+        `<button class="btn-gold" onclick="vStart()">Ещё раз</button>`;
+      document.getElementById('v-checkWord').classList.remove('visible');
+      document.getElementById('v-message').textContent = '';
+      document.getElementById('v-progress').style.width = '100%';
+    }
+  }, 1600);
+}
+
+// ── Mode switcher ──
+function switchMode(mode) {
+  document.getElementById('tab-check').classList.toggle('active', mode === 'check');
+  document.getElementById('tab-vocab').classList.toggle('active', mode === 'vocab');
+  document.getElementById('filters-check').style.display = mode === 'check' ? '' : 'none';
+  document.getElementById('filters-vocab').style.display = mode === 'vocab' ? '' : 'none';
+  document.querySelector('.game-area').style.display = mode === 'check' ? '' : 'none';
+  document.getElementById('vocab-area').style.display = mode === 'vocab' ? '' : 'none';
+  if (mode === 'vocab' && vState.current.length === 0) vStart();
+}
+
+</script>
+</body>
+</html>

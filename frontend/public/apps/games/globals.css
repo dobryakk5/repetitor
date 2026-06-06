@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IM+Fell+English:ital@0;1&family=Martel:wght@300;400;600;700&display=swap');
+
+:root {
+  --parchment: #f5ead8;
+  --parchment-dark: #e8d5b0;
+  --ink: #1a1208;
+  --ink-red: #8B1A1A;
+  --ink-blue: #1A2A5E;
+  --ink-green: #1A4A22;
+  --shadow: rgba(26, 18, 8, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--parchment);
+  color: var(--ink);
+  font-family: 'Martel', 'Palatino Linotype', serif;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Playfair Display', 'Times New Roman', serif;
+  letter-spacing: 0.01em;
+}
+
+.font-fell {
+  font-family: 'IM Fell English', serif;
+}
+
+/* Ornamental divider */
+.ornament {
+  text-align: center;
+  color: var(--ink-red);
+  font-size: 1.5rem;
+  letter-spacing: 0.5rem;
+  margin: 1rem 0;
+  opacity: 0.6;
+}
+
+/* Paper card effect */
+.paper-card {
+  background: linear-gradient(135deg, #fdfaf4 0%, #f8f0e0 100%);
+  box-shadow: 
+    0 1px 3px rgba(0,0,0,0.06),
+    0 4px 16px rgba(0,0,0,0.1),
+    inset 0 0 0 1px rgba(139, 90, 43, 0.1);
+  position: relative;
+}
+
+.paper-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ink-red), #b8500a, var(--ink-red));
+  opacity: 0.6;
+}
+
+/* Decorative border */
+.ornamental-border {
+  border: 2px solid var(--parchment-dark);
+  box-shadow: 
+    inset 0 0 0 4px var(--parchment),
+    inset 0 0 0 6px var(--parchment-dark);
+}
+
+/* Answer reveal animation */
+.answer-reveal {
+  animation: revealAnswer 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes revealAnswer {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Game card hover */
+.game-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.game-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 8px 32px rgba(26, 18, 8, 0.15),
+    0 2px 8px rgba(26, 18, 8, 0.1);
+}
+
+/* Section badge */
+.section-badge {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+/* Russian quote marks */
+.rquote::before { content: '«'; }
+.rquote::after { content: '»'; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--parchment-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: #b8956a;
+  border-radius: 4px;
+}
+
+/* Page transition */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.fade-up {
+  animation: fadeIn 0.45s ease forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-down {
+  animation: slideDown 0.2s ease forwards;
+}
+
+/* Interactive button */
+.btn-primary {
+  background: var(--ink-red);
+  color: #fdfaf4;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+}
+
+.btn-primary:hover {
+  background: #6d1515;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink-red);
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  border: 1.5px solid var(--ink-red);
+  padding: 0.45rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--ink-red);
+  color: #fdfaf4;
+}

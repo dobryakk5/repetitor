@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 МорфоЛаб — Разбор готовых слов</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            color: #111827;
+            transition: background 0.3s;
+        }
+
+        body.theme-level1 {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 45%, #7c3aed 100%);
+            --accent-1: #2563eb;
+            --accent-2: #7c3aed;
+        }
+
+        body.theme-level2 {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 45%, #ec4899 100%);
+            --accent-1: #7c3aed;
+            --accent-2: #ec4899;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+        }
+
+        .header-top {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title p {
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 12px;
+            background: var(--accent-1);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+        }
+
+        .stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--accent-1);
+        }
+
+        .level-switch {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .level-tab {
+            padding: 12px 20px;
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background: rgba(255,255,255,0.92);
+            color: #1f2937;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+        }
+
+        .level-tab:hover {
+            transform: translateY(-2px);
+        }
+
+        .level-tab.active {
+            background: white;
+            border-color: var(--accent-2);
+            color: #4c1d95;
+        }
+
+        .analysis-panel {
+            display: none;
+        }
+
+        .analysis-panel.active {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+        }
+
+        .analysis-panel.stacked {
+            grid-template-columns: 1fr;
+        }
+
+        .analysis-panel.stacked .types-card {
+            margin-top: 20px;
+        }
+
+        .panel-card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .panel-desc {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .word-card {
+            background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+            padding: 16px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .word-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #4b5563;
+            font-weight: 700;
+        }
+
+        .word-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1f2937;
+            margin-top: 6px;
+        }
+
+        .morpheme-blocks {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .morpheme-block {
+            position: relative;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 16px;
+            background: #e5e7eb;
+            color: #111827;
+            font-weight: 800;
+            font-size: 22px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .morpheme-block.selected {
+            background: #c4b5fd;
+            box-shadow: 0 0 0 4px #7c3aed inset;
+        }
+
+        .morpheme-block.correct {
+            color: white;
+        }
+
+        .morpheme-block:disabled {
+            cursor: default;
+            opacity: 0.95;
+        }
+
+        .morpheme-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #10b981;
+            color: white;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .status {
+            min-height: 24px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        .types-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+        }
+
+        .types-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .type-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .type-btn {
+            border: none;
+            padding: 16px 12px;
+            border-radius: 16px;
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .type-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .type-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .type-icon {
+            font-size: 26px;
+        }
+
+        .next-btn {
+            width: 100%;
+            margin-top: 16px;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: #10b981;
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.2s;
+        }
+
+        .next-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .next-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 16px;
+            border-radius: 18px;
+            padding: 18px;
+            text-align: center;
+            font-weight: 700;
+            display: none;
+        }
+
+        .feedback.success {
+            display: block;
+            background: #dcfce7;
+            border: 3px solid #22c55e;
+            color: #166534;
+        }
+
+        .feedback .emoji {
+            font-size: 32px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* Level 2 letters */
+        .letters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .letter {
+            width: 96px;
+            height: 96px;
+            border-radius: 14px;
+            border: 3px solid transparent;
+            background: #e5e7eb;
+            color: #111827;
+            font-weight: 800;
+            font-size: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .letter.selected {
+            border-color: #7c3aed;
+            background: #c4b5fd;
+        }
+
+        .letter.locked {
+            color: white;
+            cursor: default;
+        }
+
+        .morpheme-merged {
+            padding: 20px 28px;
+            border-radius: 18px;
+            color: white;
+            font-weight: 800;
+            font-size: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 980px) {
+            .analysis-panel.active {
+                grid-template-columns: 1fr;
+            }
+
+            .header-top {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .stats {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .type-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="theme-level1">
+    <div class="container">
+        <button onclick="window.location.href='index.html'" class="back-btn">← Назад к выбору игр</button>
+
+        <div class="header">
+            <div class="header-top">
+                <div class="header-title">
+                    <h1>🔍 Разбор морфем</h1>
+                    <p>Определи морфемы в готовых словах и закрепи правила</p>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Очки</div>
+                        <div class="stat-value" id="analysisScore">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Слово</div>
+                        <div class="stat-value" id="analysisWord">1/12</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Режим</div>
+                        <div class="stat-value" id="analysisLevelLabel">Уровень 1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="level-switch">
+            <button class="level-tab active" data-level="1">Уровень 1: блоки</button>
+            <button class="level-tab" data-level="2">Уровень 2: по буквам</button>
+        </div>
+
+        <div class="analysis-panel active" id="level1Panel">
+            <div class="panel-card">
+                <div class="panel-title">Разбери слово по составу</div>
+                <div class="panel-desc">Кликни на морфему и выбери её тип.</div>
+
+                <div class="word-card">
+                    <div class="word-label">Слово</div>
+                    <div class="word-value" id="level1Word"></div>
+                </div>
+
+                <div class="morpheme-blocks" id="level1Blocks"></div>
+                <div class="status" id="level1Status"></div>
+                <div class="feedback" id="level1Feedback"></div>
+            </div>
+
+            <div class="types-card">
+                <div class="types-title">Выбери тип морфемы</div>
+                <div class="type-buttons" id="level1Types"></div>
+                <button class="next-btn" id="level1NextBtn" disabled>Следующее слово →</button>
+            </div>
+        </div>
+
+        <div class="analysis-panel stacked" id="level2Panel">
+            <div class="panel-card">
+                <div class="panel-title">Выдели морфемы по буквам</div>
+                <div class="panel-desc">Выделяй буквы подряд, затем выбирай тип морфемы.</div>
+
+                <div class="word-card">
+                    <div class="word-label">Слово</div>
+                    <div class="word-value" id="level2Word"></div>
+                </div>
+
+                <div class="letters" id="level2Letters"></div>
+                <div class="status" id="level2Status"></div>
+                <div class="feedback" id="level2Feedback"></div>
+                <div class="types-card" style="margin-top: 20px;">
+                    <div class="types-title">Выбери тип морфемы</div>
+                    <div class="type-buttons" id="level2Types"></div>
+                    <button class="next-btn" id="level2NextBtn" disabled>Следующее слово →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MORPHEME_TYPES = [
+            { type: 'prefix', label: 'Приставка', color: '#3B82F6', icon: '→' },
+            { type: 'root', label: 'Корень', color: '#10B981', icon: '■' },
+            { type: 'suffix', label: 'Суффикс', color: '#F59E0B', icon: '▲' },
+            { type: 'ending', label: 'Окончание', color: '#EF4444', icon: '●' }
+        ];
+
+        const LEVEL1_WORDS = [
+            {
+                id: 1,
+                word: 'подснежник',
+                morphemes: [
+                    { text: 'под', type: 'prefix' },
+                    { text: 'снеж', type: 'root' },
+                    { text: 'ник', type: 'suffix' }
+                ]
+            },
+            {
+                id: 2,
+                word: 'перелесок',
+                morphemes: [
+                    { text: 'пере', type: 'prefix' },
+                    { text: 'лес', type: 'root' },
+                    { text: 'ок', type: 'suffix' }
+                ]
+            },
+            {
+                id: 3,
+                word: 'пришкольный',
+                morphemes: [
+                    { text: 'при', type: 'prefix' },
+                    { text: 'школь', type: 'root' },
+                    { text: 'н', type: 'suffix' },
+                    { text: 'ый', type: 'ending' }
+                ]
+            },
+            {
+                id: 4,
+                word: 'домик',
+                morphemes: [
+                    { text: 'дом', type: 'root' },
+                    { text: 'ик', type: 'suffix' }
+                ]
+            },
+            {
+                id: 5,
+                word: 'заморозки',
+                morphemes: [
+                    { text: 'за', type: 'prefix' },
+                    { text: 'мороз', type: 'root' },
+                    { text: 'к', type: 'suffix' },
+                    { text: 'и', type: 'ending' }
+                ]
+            },
+            {
+                id: 6,
+                word: 'рыбак',
+                morphemes: [
+                    { text: 'рыб', type: 'root' },
+                    { text: 'ак', type: 'suffix' }
+                ]
+            },
+            {
+                id: 7,
+                word: 'беззаботный',
+                morphemes: [
+                    { text: 'без', type: 'prefix' },
+                    { text: 'забот', type: 'root' },
+                    { text: 'н', type: 'suffix' },
+                    { text: 'ый', type: 'ending' }
+                ]
+            },
+            {
+                id: 8,
+                word: 'листочек',
+                morphemes: [
+                    { text: 'лист', type: 'root' },
+                    { text: 'оч', type: 'suffix' },
+                    { text: 'ек', type: 'suffix' }
+                ]
+            },
+            {
+                id: 9,
+                word: 'переписка',
+                morphemes: [
+                    { text: 'пере', type: 'prefix' },
+                    { text: 'пис', type: 'root' },
+                    { text: 'к', type: 'suffix' },
+                    { text: 'а', type: 'ending' }
+                ]
+            },
+            {
+                id: 10,
+                word: 'садовник',
+                morphemes: [
+                    { text: 'сад', type: 'root' },
+                    { text: 'ов', type: 'suffix' },
+                    { text: 'ник', type: 'suffix' }
+                ]
+            },
+            {
+                id: 11,
+                word: 'прибрежный',
+                morphemes: [
+                    { text: 'при', type: 'prefix' },
+                    { text: 'береж', type: 'root' },
+                    { text: 'н', type: 'suffix' },
+                    { text: 'ый', type: 'ending' }
+                ]
+            },
+            {
+                id: 12,
+                word: 'грибной',
+                morphemes: [
+                    { text: 'гриб', type: 'root' },
+                    { text: 'н', type: 'suffix' },
+                    { text: 'ой', type: 'ending' }
+                ]
+            }
+        ];
+
+        const LEVEL2_WORDS = [
+            {
+                id: 1,
+                word: 'походка',
+                morphemes: [
+                    { text: 'по', type: 'prefix', startIndex: 0, endIndex: 1 },
+                    { text: 'ход', type: 'root', startIndex: 2, endIndex: 4 },
+                    { text: 'к', type: 'suffix', startIndex: 5, endIndex: 5 },
+                    { text: 'а', type: 'ending', startIndex: 6, endIndex: 6 }
+                ]
+            },
+            {
+                id: 2,
+                word: 'выходной',
+                morphemes: [
+                    { text: 'вы', type: 'prefix', startIndex: 0, endIndex: 1 },
+                    { text: 'ход', type: 'root', startIndex: 2, endIndex: 4 },
+                    { text: 'н', type: 'suffix', startIndex: 5, endIndex: 5 },
+                    { text: 'ой', type: 'ending', startIndex: 6, endIndex: 7 }
+                ]
+            },
+            {
+                id: 3,
+                word: 'учительница',
+                morphemes: [
+                    { text: 'уч', type: 'root', startIndex: 0, endIndex: 1 },
+                    { text: 'и', type: 'suffix', startIndex: 2, endIndex: 2 },
+                    { text: 'тель', type: 'suffix', startIndex: 3, endIndex: 6 },
+                    { text: 'ниц', type: 'suffix', startIndex: 7, endIndex: 9 },
+                    { text: 'а', type: 'ending', startIndex: 10, endIndex: 10 }
+                ]
+            },
+            {
+                id: 4,
+                word: 'пересадка',
+                morphemes: [
+                    { text: 'пере', type: 'prefix', startIndex: 0, endIndex: 3 },
+                    { text: 'сад', type: 'root', startIndex: 4, endIndex: 6 },
+                    { text: 'к', type: 'suffix', startIndex: 7, endIndex: 7 },
+                    { text: 'а', type: 'ending', startIndex: 8, endIndex: 8 }
+                ]
+            },
+            {
+                id: 5,
+                word: 'заплыв',
+                morphemes: [
+                    { text: 'за', type: 'prefix', startIndex: 0, endIndex: 1 },
+                    { text: 'плыв', type: 'root', startIndex: 2, endIndex: 5 }
+                ]
+            },
+            {
+                id: 6,
+                word: 'читатели',
+                morphemes: [
+                    { text: 'чит', type: 'root', startIndex: 0, endIndex: 2 },
+                    { text: 'а', type: 'suffix', startIndex: 3, endIndex: 3 },
+                    { text: 'тель', type: 'suffix', startIndex: 4, endIndex: 7 },
+                    { text: 'и', type: 'ending', startIndex: 8, endIndex: 8 }
+                ]
+            },
+            {
+                id: 7,
+                word: 'безлунный',
+                morphemes: [
+                    { text: 'без', type: 'prefix', startIndex: 0, endIndex: 2 },
+                    { text: 'лун', type: 'root', startIndex: 3, endIndex: 5 },
+                    { text: 'н', type: 'suffix', startIndex: 6, endIndex: 6 },
+                    { text: 'ый', type: 'ending', startIndex: 7, endIndex: 8 }
+                ]
+            },
+            {
+                id: 8,
+                word: 'грибочек',
+                morphemes: [
+                    { text: 'гриб', type: 'root', startIndex: 0, endIndex: 3 },
+                    { text: 'оч', type: 'suffix', startIndex: 4, endIndex: 5 },
+                    { text: 'ек', type: 'suffix', startIndex: 6, endIndex: 7 }
+                ]
+            },
+            {
+                id: 9,
+                word: 'прилетели',
+                morphemes: [
+                    { text: 'при', type: 'prefix', startIndex: 0, endIndex: 2 },
+                    { text: 'лет', type: 'root', startIndex: 3, endIndex: 5 },
+                    { text: 'е', type: 'suffix', startIndex: 6, endIndex: 6 },
+                    { text: 'л', type: 'suffix', startIndex: 7, endIndex: 7 },
+                    { text: 'и', type: 'ending', startIndex: 8, endIndex: 8 }
+                ]
+            },
+            {
+                id: 10,
+                word: 'подводник',
+                morphemes: [
+                    { text: 'под', type: 'prefix', startIndex: 0, endIndex: 2 },
+                    { text: 'вод', type: 'root', startIndex: 3, endIndex: 5 },
+                    { text: 'ник', type: 'suffix', startIndex: 6, endIndex: 8 }
+                ]
+            },
+            {
+                id: 11,
+                word: 'бесшумный',
+                morphemes: [
+                    { text: 'бес', type: 'prefix', startIndex: 0, endIndex: 2 },
+                    { text: 'шум', type: 'root', startIndex: 3, endIndex: 5 },
+                    { text: 'н', type: 'suffix', startIndex: 6, endIndex: 6 },
+                    { text: 'ый', type: 'ending', startIndex: 7, endIndex: 8 }
+                ]
+            },
+            {
+                id: 12,
+                word: 'цветной',
+                morphemes: [
+                    { text: 'цвет', type: 'root', startIndex: 0, endIndex: 3 },
+                    { text: 'н', type: 'suffix', startIndex: 4, endIndex: 4 },
+                    { text: 'ой', type: 'ending', startIndex: 5, endIndex: 6 }
+                ]
+            }
+        ];
+
+        let activeLevel = 1;
+
+        const level1State = {
+            currentIndex: 0,
+            answers: [],
+            selectedIndex: null,
+            score: 0,
+            resetTimer: null
+        };
+
+        const level2State = {
+            currentIndex: 0,
+            letterStates: [],
+            selectedLetters: [],
+            completedMorphemes: [],
+            score: 0,
+            resetTimer: null
+        };
+
+        function setActiveLevel(level) {
+            activeLevel = level;
+            document.getElementById('level1Panel').classList.toggle('active', level === 1);
+            document.getElementById('level2Panel').classList.toggle('active', level === 2);
+            document.querySelectorAll('.level-tab').forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.level) === level);
+            });
+            document.body.classList.toggle('theme-level1', level === 1);
+            document.body.classList.toggle('theme-level2', level === 2);
+            updateHeader();
+        }
+
+        function updateHeader() {
+            const scoreEl = document.getElementById('analysisScore');
+            const wordEl = document.getElementById('analysisWord');
+            const levelLabelEl = document.getElementById('analysisLevelLabel');
+
+            if (activeLevel === 1) {
+                scoreEl.textContent = level1State.score;
+                wordEl.textContent = `${level1State.currentIndex + 1}/${LEVEL1_WORDS.length}`;
+                levelLabelEl.textContent = 'Уровень 1';
+            } else {
+                scoreEl.textContent = level2State.score;
+                wordEl.textContent = `${level2State.currentIndex + 1}/${LEVEL2_WORDS.length}`;
+                levelLabelEl.textContent = 'Уровень 2';
+            }
+        }
+
+        function renderTypeButtons(containerId, onSelect) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            MORPHEME_TYPES.forEach(type => {
+                const btn = document.createElement('button');
+                btn.className = 'type-btn';
+                btn.style.background = type.color;
+                btn.innerHTML = `<span class="type-icon">${type.icon}</span><span>${type.label}</span>`;
+                btn.addEventListener('click', () => onSelect(type.type));
+                container.appendChild(btn);
+            });
+        }
+
+        function loadLevel1Word() {
+            const word = LEVEL1_WORDS[level1State.currentIndex];
+            level1State.answers = word.morphemes.map(() => ({ selectedType: null, isCorrect: null }));
+            level1State.selectedIndex = null;
+            renderLevel1();
+        }
+
+        function renderLevel1() {
+            const word = LEVEL1_WORDS[level1State.currentIndex];
+            document.getElementById('level1Word').textContent = word.word;
+
+            const blocks = document.getElementById('level1Blocks');
+            blocks.innerHTML = '';
+
+            word.morphemes.forEach((morpheme, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'morpheme-block';
+                btn.textContent = morpheme.text;
+
+                const answer = level1State.answers[index];
+                if (level1State.selectedIndex === index && answer.isCorrect === null) {
+                    btn.classList.add('selected');
+                }
+
+                if (answer.isCorrect === true) {
+                    btn.classList.add('correct');
+                    const color = MORPHEME_TYPES.find(t => t.type === morpheme.type)?.color || '#10b981';
+                    btn.style.background = color;
+                    btn.disabled = true;
+
+                    const badge = document.createElement('span');
+                    badge.className = 'morpheme-badge';
+                    badge.textContent = '✓';
+                    btn.appendChild(badge);
+                }
+
+                btn.addEventListener('click', () => {
+                    if (level1State.answers[index]?.isCorrect === true) return;
+                    level1State.selectedIndex = index;
+                    renderLevel1();
+                });
+
+                blocks.appendChild(btn);
+            });
+
+            const isComplete = level1State.answers.every(a => a.isCorrect === true);
+            const status = document.getElementById('level1Status');
+            status.textContent = isComplete
+                ? 'Слово разобрано! Нажми «Следующее слово». '
+                : (level1State.selectedIndex !== null
+                    ? `Выбери тип морфемы "${word.morphemes[level1State.selectedIndex].text}"`
+                    : 'Нажми на морфему, чтобы определить её тип.');
+
+            const feedback = document.getElementById('level1Feedback');
+            if (isComplete) {
+                feedback.className = 'feedback success';
+                feedback.innerHTML = '<span class="emoji">🎉</span>Отлично! Все морфемы определены правильно.';
+            } else {
+                feedback.className = 'feedback';
+                feedback.innerHTML = '';
+            }
+
+            const nextBtn = document.getElementById('level1NextBtn');
+            nextBtn.disabled = !isComplete;
+
+            updateHeader();
+        }
+
+        function selectTypeLevel1(type) {
+            if (level1State.selectedIndex === null) return;
+
+            const word = LEVEL1_WORDS[level1State.currentIndex];
+            const correctType = word.morphemes[level1State.selectedIndex].type;
+
+            if (type === correctType) {
+                level1State.answers[level1State.selectedIndex] = { selectedType: type, isCorrect: true };
+                level1State.selectedIndex = null;
+                level1State.score += 10;
+                renderLevel1();
+            } else {
+                showLevel1Error();
+            }
+        }
+
+        function showLevel1Error() {
+            const status = document.getElementById('level1Status');
+            status.textContent = 'Неправильно! Попробуй ещё раз.';
+
+            if (level1State.resetTimer) {
+                clearTimeout(level1State.resetTimer);
+            }
+
+            level1State.resetTimer = setTimeout(() => {
+                loadLevel1Word();
+            }, 900);
+        }
+
+        function nextWordLevel1() {
+            if (level1State.currentIndex < LEVEL1_WORDS.length - 1) {
+                level1State.currentIndex += 1;
+                loadLevel1Word();
+            }
+        }
+
+        function loadLevel2Word() {
+            const word = LEVEL2_WORDS[level2State.currentIndex];
+            const letters = word.word.split('');
+            level2State.letterStates = letters.map(() => ({ isCorrect: null, morphemeIndex: null }));
+            level2State.selectedLetters = [];
+            level2State.completedMorphemes = [];
+            renderLevel2();
+        }
+
+        function renderLevel2() {
+            const word = LEVEL2_WORDS[level2State.currentIndex];
+            const letters = word.word.split('');
+            document.getElementById('level2Word').textContent = word.word;
+
+            const lettersEl = document.getElementById('level2Letters');
+            lettersEl.innerHTML = '';
+
+            let index = 0;
+            while (index < letters.length) {
+                const mergedIndex = level2State.completedMorphemes.find(
+                    (mIndex) => word.morphemes[mIndex].startIndex === index
+                );
+
+                if (mergedIndex !== undefined) {
+                    const morpheme = word.morphemes[mergedIndex];
+                    const merged = document.createElement('div');
+                    merged.className = 'morpheme-merged';
+                    merged.textContent = morpheme.text;
+                    const color = MORPHEME_TYPES.find(t => t.type === morpheme.type)?.color || '#10b981';
+                    merged.style.background = color;
+                    lettersEl.appendChild(merged);
+                    index = morpheme.endIndex + 1;
+                    continue;
+                }
+
+                const btn = document.createElement('button');
+                btn.className = 'letter';
+                btn.textContent = letters[index];
+
+                const state = level2State.letterStates[index];
+                const isSelected = level2State.selectedLetters.includes(index);
+
+                if (isSelected) {
+                    btn.classList.add('selected');
+                }
+
+                btn.addEventListener('click', () => toggleLetter(index));
+                lettersEl.appendChild(btn);
+                index += 1;
+            }
+
+            const isComplete = level2State.completedMorphemes.length === word.morphemes.length;
+            const status = document.getElementById('level2Status');
+            status.textContent = isComplete
+                ? 'Слово разобрано! Нажми «Следующее слово». '
+                : 'Выдели буквы подряд и выбери тип.';
+
+            const feedback = document.getElementById('level2Feedback');
+            if (isComplete) {
+                feedback.className = 'feedback success';
+                feedback.innerHTML = '<span class="emoji">🏆</span>Отлично! Все морфемы определены правильно.';
+            } else {
+                feedback.className = 'feedback';
+                feedback.innerHTML = '';
+            }
+
+            const nextBtn = document.getElementById('level2NextBtn');
+            nextBtn.disabled = !isComplete;
+
+            updateHeader();
+        }
+
+        function toggleLetter(index) {
+            const state = level2State.letterStates[index];
+            if (state?.isCorrect === true) return;
+
+            const selected = level2State.selectedLetters;
+            const existingIndex = selected.indexOf(index);
+
+            if (existingIndex > -1) {
+                selected.splice(existingIndex, 1);
+            } else {
+                selected.push(index);
+            }
+
+            selected.sort((a, b) => a - b);
+            renderLevel2();
+        }
+
+        function selectTypeLevel2(type) {
+            if (level2State.selectedLetters.length === 0) return;
+
+            const word = LEVEL2_WORDS[level2State.currentIndex];
+            const letters = word.word.split('');
+            const selected = level2State.selectedLetters;
+
+            const startIndex = selected[0];
+            const endIndex = selected[selected.length - 1];
+
+            const isContiguous = endIndex - startIndex + 1 === selected.length;
+            const selectedText = selected.map(i => letters[i]).join('');
+
+            const match = word.morphemes.find(m =>
+                m.startIndex === startIndex &&
+                m.endIndex === endIndex &&
+                m.type === type &&
+                m.text === selectedText &&
+                isContiguous
+            );
+
+            if (match) {
+                const morphemeIndex = word.morphemes.indexOf(match);
+                selected.forEach(i => {
+                    level2State.letterStates[i] = { isCorrect: true, morphemeIndex };
+                });
+                level2State.selectedLetters = [];
+                if (!level2State.completedMorphemes.includes(morphemeIndex)) {
+                    level2State.completedMorphemes.push(morphemeIndex);
+                }
+                level2State.score += 10;
+                renderLevel2();
+            } else {
+                showLevel2Error();
+            }
+        }
+
+        function showLevel2Error() {
+            const status = document.getElementById('level2Status');
+            status.textContent = 'Неправильно! Попробуй ещё раз.';
+
+            if (level2State.resetTimer) {
+                clearTimeout(level2State.resetTimer);
+            }
+
+            level2State.resetTimer = setTimeout(() => {
+                loadLevel2Word();
+            }, 900);
+        }
+
+        function nextWordLevel2() {
+            if (level2State.currentIndex < LEVEL2_WORDS.length - 1) {
+                level2State.currentIndex += 1;
+                loadLevel2Word();
+            }
+        }
+
+        function init() {
+            renderTypeButtons('level1Types', selectTypeLevel1);
+            renderTypeButtons('level2Types', selectTypeLevel2);
+
+            document.getElementById('level1NextBtn').addEventListener('click', nextWordLevel1);
+            document.getElementById('level2NextBtn').addEventListener('click', nextWordLevel2);
+
+            document.querySelectorAll('.level-tab').forEach(tab => {
+                tab.addEventListener('click', () => setActiveLevel(Number(tab.dataset.level)));
+            });
+
+            loadLevel1Word();
+            loadLevel2Word();
+            setActiveLevel(1);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
