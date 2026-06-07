@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/api';
-import type { DashboardOverview, Student } from '@/lib/types';
+import type { DashboardOverview, Student, StudentShareLink } from '@/lib/types';
 
 export const studentsApi = {
   overview() {
@@ -24,5 +24,8 @@ export const studentsApi = {
   },
   update(studentId: number, payload: Partial<{ first_name: string; last_name: string; grade: number | null; parent_contact: string; learning_goal: string; start_level: string; comment: string; is_active: boolean }>) {
     return apiFetch<Student>(`/students/${studentId}/`, { method: 'PATCH', body: payload });
+  },
+  regenerateShareLink(studentId: number) {
+    return apiFetch<StudentShareLink>(`/students/${studentId}/share-link/`, { method: 'POST' });
   },
 };

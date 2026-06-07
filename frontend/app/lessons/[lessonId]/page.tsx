@@ -7,6 +7,7 @@ import { lessonsApi } from '@/lib/api/lessons';
 import { reportsApi } from '@/lib/api/reports';
 import { schoolApi } from '@/lib/api/school';
 import { studentsApi } from '@/lib/api/students';
+import { masteryStatusLabel } from '@/lib/labels';
 import type { Lesson, MistakeType, Skill, Student, Subject, Topic } from '@/lib/types';
 
 const PANEL_CLASS = 'rounded-[10px] border border-[#e0ddd6] bg-white shadow-sm';
@@ -127,7 +128,7 @@ export default function LessonPage() {
               <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="text-[16px] font-semibold">{topicById.get(result.topicId) || `Тема #${result.topicId}`}</div>
-                  <div className="mt-1 text-[12px] text-[#73726c]">{result.skillId ? skillById.get(result.skillId) || `Навык #${result.skillId}` : 'Без конкретного навыка'} · статус: {result.masteryStatus}</div>
+                  <div className="mt-1 text-[12px] text-[#73726c]">{result.skillId ? skillById.get(result.skillId) || `Навык #${result.skillId}` : 'Без конкретного навыка'} · статус: {masteryStatusLabel(result.masteryStatus)}</div>
                 </div>
                 {result.needsRepeat ? <span className="w-max rounded-full bg-amber-100 px-3 py-1 text-[12px] text-amber-800">нужно повторить</span> : null}
               </div>

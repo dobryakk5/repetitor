@@ -23,6 +23,8 @@ class Student(Base):
     learning_goal: Mapped[str] = mapped_column(Text, default="", nullable=False)
     start_level: Mapped[str] = mapped_column(Text, default="", nullable=False)
     comment: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    share_token_hash: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)
+    share_token_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)

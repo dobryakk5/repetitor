@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import analytics, auth, health, lessons, reports, school, students
+from app.routers import analytics, auth, health, lessons, public, reports, school, students
 
 app = FastAPI(title="TutorTrack API")
 app.add_middleware(
@@ -15,6 +15,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(public.router)
 app.include_router(students.router)
 app.include_router(school.router)
 app.include_router(lessons.router)

@@ -4,12 +4,13 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { AlertTriangle, BookOpen, CheckCircle2, ClipboardList, FileText, Plus, TrendingUp } from 'lucide-react';
+import { AlertTriangle, BookOpen, CheckCircle2, ClipboardList, Copy, FileText, Plus, Share2, TrendingUp } from 'lucide-react';
 import { analyticsApi } from '@/lib/api/analytics';
 import { lessonsApi } from '@/lib/api/lessons';
 import { reportsApi } from '@/lib/api/reports';
 import { schoolApi } from '@/lib/api/school';
 import { studentsApi } from '@/lib/api/students';
+import { masteryStatusLabel } from '@/lib/labels';
 import type { AnalyticsOverview, AnalyticsSummary, Homework, Lesson, Recommendation, Report, SkillState, Student, Subject, Topic } from '@/lib/types';
 
 const PANEL_CLASS = 'rounded-[10px] border border-[#e0ddd6] bg-white shadow-sm';
@@ -29,7 +30,12 @@ export default function StudentPage() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [creatingPeriodReport, setCreatingPeriodReport] = useState(false);
+  const [generatingShareLink, setGeneratingShareLink] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalDraft, setGoalDraft] = useState('');
+  const [savingGoal, setSavingGoal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,6 +104,49 @@ export default function StudentPage() {
     }
   }
 
+  async function regenerateShareLink() {
+    setGeneratingShareLink(true);
+    setError(null);
+    try {
+      const result = await studentsApi.regenerateShareLink(studentId);
+      setShareUrl(result.url);
+      try {
+        await navigator.clipboard?.writeText(result.url);
+      } catch {
+        // The link is still shown when clipboard access is unavailable.
+      }
+    } catch {
+      setError('Не удалось создать публичную ссылку.');
+    } finally {
+      setGeneratingShareLink(false);
+    }
+  }
+
+  async function copyShareLink() {
+    if (!shareUrl) return;
+    await navigator.clipboard?.writeText(shareUrl);
+  }
+
+  function startGoalEdit() {
+    setGoalDraft(student?.learningGoal ?? '');
+    setEditingGoal(true);
+  }
+
+  async function saveGoal() {
+    if (!student) return;
+    setSavingGoal(true);
+    setError(null);
+    try {
+      const updated = await studentsApi.update(student.id, { learning_goal: goalDraft });
+      setStudent(updated);
+      setEditingGoal(false);
+    } catch {
+      setError('Не удалось сохранить цель.');
+    } finally {
+      setSavingGoal(false);
+    }
+  }
+
   if (loading) return <main className="p-6 text-[14px] text-[#73726c]">Загрузка...</main>;
   if (error || !student) return <main className="p-6 text-[14px] text-[#8a4b00]">{error || 'Ученик не найден.'}</main>;
 
@@ -106,16 +155,61 @@ export default function StudentPage() {
       <div className="mx-auto max-w-6xl space-y-5">
         <div className="flex items-center justify-between gap-3">
           <Link href="/students" className="text-[13px] text-[#73726c]">← К ученикам</Link>
-          <Link href={`/students/${student.id}/lessons/new`} className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-[#1a1a18] px-4 text-[13px] font-medium text-white"><Plus className="h-4 w-4" /> Новый урок</Link>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button onClick={() => void regenerateShareLink()} disabled={generatingShareLink} className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-[#d8d4ca] bg-white px-4 text-[13px] font-medium text-[#1a1a18] disabled:opacity-60">
+              <Share2 className="h-4 w-4" /> {generatingShareLink ? 'Генерация...' : 'Ссылка для родителя'}
+            </button>
+            <Link href={`/students/${student.id}/lessons/new`} className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-[#1a1a18] px-4 text-[13px] font-medium text-white"><Plus className="h-4 w-4" /> Новый урок</Link>
+          </div>
         </div>
+
+        {shareUrl ? (
+          <section className={`${PANEL_CLASS} flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between`}>
+            <div className="min-w-0">
+              <div className="text-[13px] font-medium">Публичная read-only ссылка создана</div>
+              <div className="mt-1 truncate text-[12px] text-[#73726c]">{shareUrl}</div>
+            </div>
+            <button onClick={() => void copyShareLink()} className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-[8px] border border-[#d8d4ca] bg-white px-3 text-[13px] font-medium">
+              <Copy className="h-4 w-4" /> Скопировать
+            </button>
+          </section>
+        ) : null}
 
         <section className={`${PANEL_CLASS} p-5`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex gap-4">
+            <div className="flex min-w-0 flex-1 gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#e1f5ee] text-[16px] font-semibold text-[#0f6e56]">{student.initials}</div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h1 className="text-[26px] font-semibold">{student.name}</h1>
                 <div className="mt-1 text-[13px] text-[#73726c]">{student.grade ? `${student.grade} класс` : 'Класс не указан'}{student.parentContact ? ` · ${student.parentContact}` : ''}</div>
+                <div className="mt-4 rounded-[8px] bg-[#f5f4f0] p-4 text-[13px]">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <b>Цель:</b>
+                    {!editingGoal ? <button onClick={startGoalEdit} className="text-[12px] font-medium text-[#1a1a18] underline underline-offset-2">Редактировать</button> : null}
+                  </div>
+                  {editingGoal ? (
+                    <div className="space-y-3">
+                      <textarea
+                        className="min-h-[92px] w-full rounded-[8px] border border-[#d8d4ca] bg-white p-3 text-[13px] outline-none focus:border-[#1a1a18]"
+                        value={goalDraft}
+                        onChange={(event) => setGoalDraft(event.target.value)}
+                        autoFocus
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => void saveGoal()} disabled={savingGoal} className="h-9 rounded-[8px] bg-[#1a1a18] px-4 text-[13px] font-medium text-white disabled:opacity-60">
+                          {savingGoal ? 'Сохранение...' : 'Сохранить'}
+                        </button>
+                        <button onClick={() => setEditingGoal(false)} disabled={savingGoal} className="h-9 rounded-[8px] border border-[#d8d4ca] bg-white px-4 text-[13px] font-medium">
+                          Отмена
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={startGoalEdit} className="block w-full rounded-[6px] text-left leading-6 text-[#34342f] hover:bg-white/70">
+                      {student.learningGoal || <span className="text-[#73726c]">Добавить цель обучения</span>}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-[12px]">
@@ -125,7 +219,6 @@ export default function StudentPage() {
               <Badge icon={<AlertTriangle className="h-4 w-4" />} label="Рекомендаций" value={effectiveOverview?.activeRecommendationsCount ?? 0} />
             </div>
           </div>
-          {student.learningGoal ? <div className="mt-5 rounded-[8px] bg-[#f5f4f0] p-4 text-[13px]"><b>Цель:</b> {student.learningGoal}</div> : null}
           {student.startLevel ? <div className="mt-3 rounded-[8px] bg-[#f5f4f0] p-4 text-[13px]"><b>Стартовый уровень:</b> {student.startLevel}</div> : null}
         </section>
 
@@ -174,7 +267,7 @@ export default function StudentPage() {
                     <div className="text-[13px] font-medium">{topicById.get(state.topicId) || `Тема #${state.topicId}`}</div>
                     <div className="text-[13px] font-semibold">{state.currentProgressScore}%</div>
                   </div>
-                  <div className="mt-1 text-[12px] text-[#73726c]">Риск: {riskLabel(state.riskLevel)} · статус: {state.masteryStatus}</div>
+                  <div className="mt-1 text-[12px] text-[#73726c]">Риск: {riskLabel(state.riskLevel)} · статус: {masteryStatusLabel(state.masteryStatus)}</div>
                 </div>
               ))}
             </div> : <div className="px-5 py-6 text-[13px] text-[#73726c]">Аналитика появится после сохранения урока с темами.</div>}

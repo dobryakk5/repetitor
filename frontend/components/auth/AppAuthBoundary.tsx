@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { clearCachedAuthUser, getCachedAuthUser } from '@/lib/api/auth-cache';
 
-const PUBLIC_PATHS = ['/', '/login', '/register', '/training', '/tracking'];
+const PUBLIC_PATHS = ['/', '/login', '/register', '/training', '/tracking', '/share'];
 
 export function AppAuthBoundary({ children }: { children: ReactNode }) {
   const pathname = usePathname();

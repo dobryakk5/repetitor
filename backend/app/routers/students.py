@@ -31,6 +31,7 @@ from app.services.students import (
     serialize_student_with_counts,
     student_or_404,
 )
+from app.services.share import create_student_share_link
 
 router = APIRouter()
 
@@ -173,6 +174,16 @@ def update_student(
     db.commit()
     db.refresh(item)
     return serialize_student(db, item)
+
+
+@router.post("/api/students/{student_id}/share-link/")
+def regenerate_student_share_link(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_tutor),
+) -> dict[str, Any]:
+    item = owned_student_or_404(db, student_id, current_user)
+    return create_student_share_link(db, item)
 
 
 @router.delete("/api/students/{student_id}/", response_model=DeletedResponse)

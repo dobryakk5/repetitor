@@ -40,6 +40,13 @@ export type Student = {
   updatedAt?: string | null;
 };
 
+export type StudentShareLink = {
+  studentId: number;
+  token: string;
+  url: string;
+  createdAt: string | null;
+};
+
 export type Subject = {
   id: number;
   name: string;
@@ -321,6 +328,49 @@ export type AnalyticsSummary = {
   weakTopics: AnalyticsSummaryTopic[];
   repeatedMistakes: AnalyticsSummaryMistake[];
   overview: AnalyticsOverview;
+};
+
+export type PublicLessonMistake = LessonMistake & {
+  mistakeName: string;
+};
+
+export type PublicLessonTopicResult = Omit<LessonTopicResult, 'mistakes'> & {
+  topicName: string;
+  skillName: string | null;
+  mistakes?: PublicLessonMistake[];
+};
+
+export type PublicHomework = Homework & {
+  subjectName: string | null;
+  topicName: string | null;
+  skillName: string | null;
+};
+
+export type PublicLesson = Omit<Lesson, 'topicResults' | 'homeworks' | 'tutorComment'> & {
+  subjectName: string;
+  topicResults?: PublicLessonTopicResult[];
+  homeworks?: PublicHomework[];
+};
+
+export type PublicSkillState = SkillState & {
+  subjectName: string;
+  topicName: string;
+  skillName: string | null;
+};
+
+export type PublicRecommendation = Recommendation & {
+  topicName: string | null;
+  skillName: string | null;
+};
+
+export type PublicStudentProgress = {
+  student: Pick<Student, 'id' | 'firstName' | 'lastName' | 'name' | 'initials' | 'grade' | 'schoolClassLabel' | 'learningGoal' | 'lessonsCount' | 'activeHomeworksCount'>;
+  summary: AnalyticsSummary;
+  skillStates: PublicSkillState[];
+  recommendations: PublicRecommendation[];
+  lessons: PublicLesson[];
+  generatedAt: string;
+  shareCreatedAt: string | null;
 };
 
 
