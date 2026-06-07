@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 from typing import Any
 
@@ -13,6 +14,8 @@ from app.core.security import create_access_token, create_refresh_token_value, h
 from app.core.time import utc_now
 from app.models.auth import RefreshSession, User
 from app.schemas.auth import LoginRequest, RegisterRequest
+
+logger = logging.getLogger(__name__)
 
 
 def normalize_email(email: str) -> str:
@@ -54,9 +57,14 @@ def register_user(db: Session, payload: RegisterRequest) -> User:
 def authenticate_user(db: Session, payload: LoginRequest) -> User:
     email = normalize_email(payload.email)
     item = db.scalar(select(User).where(func.lower(User.email) == email))
-    if item is None or not verify_password(payload.password, item.password_hash):
+    if item is None:
+        logger.warning("Login failed for email=%s reason=user_not_found", email)
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not verify_password(payload.password, item.password_hash):
+        logger.warning("Login failed for email=%s reason=invalid_password user_id=%s", email, item.id)
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if not item.is_active:
+        logger.warning("Login failed for email=%s reason=user_inactive user_id=%s", email, item.id)
         raise HTTPException(status_code=403, detail="User is inactive")
     return item
 
