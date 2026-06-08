@@ -142,7 +142,7 @@ export default function TrackingLandingPage() {
                 </div>
                 <div className="flex h-36 items-end gap-2">
                   {[34, 46, 42, 55, 61, 68, 72].map((height, index) => (
-                    <div key={index} className="flex flex-1 items-end rounded-t-[8px] bg-[#efece5]">
+                    <div key={index} className="flex h-full flex-1 items-end rounded-t-[8px] bg-[#efece5]">
                       <div className="w-full rounded-t-[8px] bg-[#1a1a18]" style={{ height: `${height}%` }} />
                     </div>
                   ))}
